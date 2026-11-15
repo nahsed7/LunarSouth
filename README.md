@@ -1,6 +1,6 @@
 # LUNARSOUTH · CLPS Mission Planner — Lunar South Pole Mission Engineering System
 
-NASA Space Apps Challenge 2026 · Human Exploration – Moon – Software.
+**NASA Space Apps Challenge 2026** · Human Exploration – Moon – Software · **[📊 View Project Presentation](https://docs.google.com/presentation/d/1GQj4CLAAFay2mVqIAkSK_3BD7cfaEf249db0T260xBU/edit?usp=sharing)**
 
 The planner compares south-pole landing sites and dates. For each site and mission window it computes:
 
