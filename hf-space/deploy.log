@@ -1,0 +1,28 @@
+Traceback (most recent call last):
+  File "/home/deshan7/Downloads/CLPSFINAL/CLPS_mission_planner-main/.venv/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 866, in hf_raise_for_status
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/deshan7/Downloads/CLPSFINAL/CLPS_mission_planner-main/.venv/lib/python3.14/site-packages/httpx2/_models.py", line 828, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx2.HTTPStatusError: Client error '402 Payment Required' for url 'https://huggingface.co/api/repos/create'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/deshan7/Downloads/CLPSFINAL/hf-space/deploy_hf.py", line 29, in <module>
+    api.create_repo(repo, repo_type="space", space_sdk="docker", exist_ok=True)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/deshan7/Downloads/CLPSFINAL/CLPS_mission_planner-main/.venv/lib/python3.14/site-packages/huggingface_hub/utils/_validators.py", line 89, in _inner_fn
+    return fn(*args, **kwargs)
+  File "/home/deshan7/Downloads/CLPSFINAL/CLPS_mission_planner-main/.venv/lib/python3.14/site-packages/huggingface_hub/hf_api.py", line 4781, in create_repo
+    raise err
+  File "/home/deshan7/Downloads/CLPSFINAL/CLPS_mission_planner-main/.venv/lib/python3.14/site-packages/huggingface_hub/hf_api.py", line 4765, in create_repo
+    hf_raise_for_status(r)
+    ~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/deshan7/Downloads/CLPSFINAL/CLPS_mission_planner-main/.venv/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 996, in hf_raise_for_status
+    raise _format(HfHubHTTPError, str(e), response) from e
+huggingface_hub.errors.HfHubHTTPError: Client error '402 Payment Required' for url 'https://huggingface.co/api/repos/create' (Request ID: Root=1-6af9756d-7f5aec8327a19d1868ad92db;d96ef6d5-dae0-4660-8a09-7f4e0ee76598)
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/402
+
+Static Spaces are free for everyone, but hosting Gradio and Docker Spaces on free cpu-basic requires a PRO subscription. Subscribe at https://huggingface.co/pro
