@@ -1,0 +1,35 @@
+{
+  "source_priority": 4,
+  "agency": "Canadian Space Agency (CSA / ASC)",
+  "retrieved": "2026-11-14",
+  "documents": [
+    {
+      "title": "Canada's new lunar utility rover will help astronauts build a future on the Moon (CSA news release)",
+      "url": "https://www.canada.ca/en/space-agency/news/2025/07/canadas-new-lunar-utility-rover-will-help-astronauts-build-a-future-on-the-moon.html",
+      "published": "2025-07-29",
+      "published_requirements_quoted": [
+        "Survive the roughly two-week-long lunar night, with temperatures as low as -200 °C",
+        "Support a lifespan of minimum 10 years"
+      ],
+      "power_specifications_published": false
+    },
+    {
+      "title": "CSA Lunar Exploration Accelerator Program (LEAP) - lunar rover Phase A studies (MDA, Canadensys)",
+      "url": "https://www.asc-csa.gc.ca/eng/funding-programs/programs/leap/",
+      "note": "Phase A studies addressed lunar-night survival, power generation and storage; no numerical power figures are published."
+    }
+  ],
+  "how_used_in_models": {
+    "ThermalConfig.env_temp_dark_c": "-200 °C dark sink temperature for survival-heater demand (CSA LUV requirement).",
+    "scenario extended_dark": "14-day zero-generation event = CSA 'roughly two-week-long lunar night'.",
+    "lifetime": "10-year minimum design life motivates the configurable degradation_factor (aging) in Model 4; no CSA degradation rate is published, so the value is an assumption."
+  },
+  "not_available_from_csa": [
+    "solar array area / efficiency / mass",
+    "battery capacity, chemistry, DoD limits",
+    "subsystem power ratings and duty cycles",
+    "dust degradation rate",
+    "RF link budget parameters"
+  ],
+  "policy": "No CSA specification is invented. Every parameter in the list above is an explicitly labelled, user-configurable engineering assumption in clps_engine/power_gen.py and clps_engine/energy.py."
+}
