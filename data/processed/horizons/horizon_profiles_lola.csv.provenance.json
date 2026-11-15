@@ -1,0 +1,10 @@
+{
+  "products": [
+    "LDEM_80S_80M (0.08-40 km)",
+    "LDEM_75S_240M (40-200 km)"
+  ],
+  "method": "ray casting, 0.5 deg azimuth, spherical curvature, observer 2.0 m above DEM surface",
+  "azimuth_convention": "clockwise from local north (north = direction away from south pole)",
+  "created": "2026-11-14T20:41:23Z",
+  "limitations": "Near-field obstacles below ~160 m scale not resolved; map-plane distance used for range (PS scale error <0.6% inside 85S); legacy LM1 mask (10 km range) retained for comparison."
+}
