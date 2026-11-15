@@ -173,3 +173,20 @@ No changes to `app.py` are needed. A broken extension stays inside its own tab.
 - Equipment figures are rounded public values from mission papers and press kits. Use them for planning only, not as flight specifications.
 - LunarSouth is an independent NASA Space Apps Challenge 2026 entry. It is **not** affiliated with or endorsed by NASA.
 - Parts of the code and documentation were written with AI assistance (Claude), and the team reviewed and tested them.
+
+
+## Team & Credits
+
+Built for the **NASA Space Apps Challenge 2026** by **Team LUNARSOUTH**:
+
+| Member | Roles & Contributions |
+| :--- | :--- |
+| **Fatima** | UI/UX Engineering, System & Model Integration, Pitch Video Animation |
+| **Eshaal** | Lunar Mission Research, Core Physics & Engineering Models (Models 1–3) |
+| **Alessandra** | Mission Research, Pitch Deck & Presentation Design, Pitch Scripting & Voiceover |
+| **Varsha** | Strategic Direction & Ideation, Challenge Alignment & Impact Framing, Team Coordination, Storyline & Voiceover |
+| **Deshan** | Team Lead, Project Website, Final Review & Submission |
+
+### Tools & AI Acknowledgment
+
+In accordance with NASA Space Apps guidelines on tool transparency, AI assistants (**ChatGPT**, **Claude**, and **Gemini**) were used during development to support code refactoring, debugging, documentation structuring, and pitch script refinement. All orbital/terrain physics logic, DEM data processing, engineering trade-offs, and final implementation decisions were designed, validated, and integrated by the team.
