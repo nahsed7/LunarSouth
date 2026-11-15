@@ -1,0 +1,16 @@
+{
+  "inputs": [
+    "LDEM_80S_20MPP_ADJ.tiff",
+    "LPSR_80S_20MPP_ADJ.tiff",
+    "LDEC_80S_20MPP_ADJ.tiff"
+  ],
+  "method": "slope by central differences at native 20 m; 10x10 block aggregation to 200 m; nodata excluded per cell",
+  "le5/le10/le15": "fraction of 20 m pixels in the 200 m cell with slope <= threshold",
+  "psr_frac": "fraction of 20 m pixels flagged permanently shadowed",
+  "shot_frac": "fraction of 20 m pixels with >=1 LOLA return (LDEC)",
+  "damaged_tile_strips": {
+    "LDEC_80S_20MPP_ADJ.tiff": 7200,
+    "LDEM_80S_20MPP_ADJ.tiff": 54
+  },
+  "runtime_s": 471.8155343532562
+}

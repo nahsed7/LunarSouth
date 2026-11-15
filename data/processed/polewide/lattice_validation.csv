@@ -1,0 +1,3 @@
+quantity,n_points,pearson_r,mean_abs_diff,bias_model_minus_lola,p90_abs_diff,note
+sun,3721,0.9844283366318849,0.015035062498134098,0.0017112275075400864,0.030428666666665827,model = calendar 2027 at 5 km points; LOLA = 18.6-yr average at 60 m - period and support differ
+earth,3721,0.9816710382984262,0.025931112395115023,0.0038257761951687014,0.07259333333333343,model = calendar 2027 at 5 km points; LOLA = 18.6-yr average at 60 m - period and support differ

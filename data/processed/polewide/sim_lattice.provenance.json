@@ -1,0 +1,14 @@
+{
+  "window": [
+    "2027-01-01T00:00:00",
+    "2028-01-01T00:00:00"
+  ],
+  "step_h": 2.0,
+  "lattice_km": 5.0,
+  "points": 11539,
+  "ephemeris": "SPICE DE421 + MOON_ME_DE421 Moon-centred apparent vectors, exact topocentric parallax per point (max |d el| vs full per-site SPICE 2.6e-5 deg; SPICE vs JPL Horizons 1.3e-5 deg)",
+  "horizon": "LOLA LDEM_80S_80M (0.16-30 km, 160 m step) + LDEM_75S_240M (30-150 km, 480 m step), 1 deg azimuth, 2 m mast",
+  "power": "Model 4 default chain, 1 m2 vertical-tracking array, W/m2 delivered to bus",
+  "runtime_s": 399.70125126838684,
+  "limitation": "lattice-scale screening; near-field relief below 80 m unresolved; point analysis uses the full chain"
+}
