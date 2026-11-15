@@ -1,4 +1,10 @@
 # LUNARSOUTH · CLPS Mission Planner — Lunar South Pole Mission Engineering System
+# Team Members:
+Deshan : created the team
+Varsha : did the research, helped with the   pitch and models
+Eshaal : designed the 3 models and worked    on the 4th one 
+Fatima(aka Skepticalli): designed the UI and integrated the models
+Alessandra : did the research, did the presentation file work, helped with the pitch video
 
 **NASA Space Apps Challenge 2026** · Human Exploration – Moon – Software · **[📊 View Project Presentation](https://docs.google.com/presentation/d/1GQj4CLAAFay2mVqIAkSK_3BD7cfaEf249db0T260xBU/edit?usp=sharing)**
 
