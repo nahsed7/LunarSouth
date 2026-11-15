@@ -1,0 +1,22 @@
+site_id,site_name,latitude_deg,longitude_deg,mission,agency,year,status,region,coord_note
+A11,Apollo 11 - Tranquility Base,0.67408,23.47297,Apollo 11,NASA,1969,landed (crewed),nearside equatorial,published LM coordinates (LROC); +/-0.001 deg
+A12,Apollo 12 - Ocean of Storms,-3.01239,-23.42157,Apollo 12,NASA,1969,landed (crewed),nearside equatorial,published LM coordinates (LROC)
+A14,Apollo 14 - Fra Mauro,-3.64530,-17.47136,Apollo 14,NASA,1971,landed (crewed),nearside equatorial,published LM coordinates (LROC)
+A15,Apollo 15 - Hadley-Apennine,26.13222,3.63386,Apollo 15,NASA,1971,landed (crewed),nearside mid-latitude,published LM coordinates (LROC)
+A16,Apollo 16 - Descartes Highlands,-8.97301,15.50019,Apollo 16,NASA,1972,landed (crewed),nearside highlands,published LM coordinates (LROC)
+A17,Apollo 17 - Taurus-Littrow,20.19080,30.77168,Apollo 17,NASA,1972,landed (crewed),nearside mid-latitude,published LM coordinates (LROC)
+SV1,Surveyor 1,-2.474,-43.339,Surveyor 1,NASA,1966,landed (robotic),nearside equatorial,published (NSSDCA/LROC) ~0.01 deg
+SV3,Surveyor 3,-3.016,-23.418,Surveyor 3,NASA,1967,landed (robotic),nearside equatorial,published (NSSDCA/LROC) ~0.01 deg
+L16,Luna 16 - Mare Fecunditatis,-0.513,56.364,Luna 16,USSR,1970,landed (sample return),nearside equatorial,published (LROC) ~0.01 deg
+L17,Luna 17 / Lunokhod 1,38.28,-35.00,Luna 17,USSR,1970,landed (rover),nearside mid-latitude,published (LROC) ~0.01 deg
+L24,Luna 24 - Mare Crisium,12.71,62.21,Luna 24,USSR,1976,landed (sample return),nearside,published (LROC) ~0.01 deg
+CE3,Chang'e 3 - Mare Imbrium,44.1214,-19.5116,Chang'e 3,CNSA,2013,landed (rover),nearside mid-latitude,published (LROC)
+CE4,Chang'e 4 - Von Karman crater,-45.4446,177.5991,Chang'e 4,CNSA,2019,landed (far side),far side,published (LROC)
+CE5,Chang'e 5 - Mons Rumker,43.0576,-51.9161,Chang'e 5,CNSA,2020,landed (sample return),nearside mid-latitude,published (LROC)
+CE6,Chang'e 6 - Apollo basin,-41.638,-153.985,Chang'e 6,CNSA,2024,landed (far-side sample return),far side,published (LROC) ~0.01 deg
+CH3,Chandrayaan-3 Vikram,-69.3733,32.3191,Chandrayaan-3,ISRO,2023,landed (south high latitude),south high latitude,published (LROC NAC_DTM_VIKRAMSITE1)
+SLIM,SLIM - Shioli crater,-13.3160,25.2510,SLIM,JAXA,2024,landed (pinpoint),nearside equatorial,published (JAXA/LROC) ~0.001 deg
+IM1,IM-1 Odysseus - Malapert A,-80.13,1.44,IM-1 (CLPS),Intuitive Machines / NASA,2024,landed (tipped),south polar region,published (LROC) ~0.01 deg
+IM2,IM-2 Athena - Mons Mouton,-84.79,29.20,IM-2 (CLPS),Intuitive Machines / NASA,2025,landed (tipped),south polar region,published (LROC) ~0.01 deg - verify
+BGM1,Blue Ghost M1 - Mare Crisium,18.56,61.81,Blue Ghost M1 (CLPS),Firefly / NASA,2025,landed,nearside,published (Firefly/LROC) ~0.01 deg - verify
+L25,Luna 25 target (crashed),-69.545,43.544,Luna 25,Roscosmos,2023,planned site (spacecraft crashed),south high latitude,pre-launch target - not a landing
