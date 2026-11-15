@@ -1,0 +1,1311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mission Sim</title>
+<style>
+:root{--bg:#04080f;--panel:#0a1422;--panel2:#0d1b2d;--line:rgba(56,217,255,.22);--cyan:#38d9ff;--txt:#d7f6ff;--dim:#7fa7b8;
+--ok:#3ddc97;--warn:#ffc857;--bad:#ff5d73;--sun:#ffd54a;--gen:#ff9f43;--earth:#4aa8ff}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font:13px/1.4 "Segoe UI",system-ui,sans-serif}
+button,select,input{font:inherit;color:var(--txt)}
+button{background:rgba(56,217,255,.08);border:1px solid var(--line);border-radius:8px;padding:5px 9px;cursor:pointer;white-space:nowrap}
+button:hover:not(:disabled){background:rgba(56,217,255,.2)}
+button:disabled{opacity:.38;cursor:not-allowed}
+button.on{background:rgba(56,217,255,.28);border-color:var(--cyan);color:#fff}
+button.warn{border-color:var(--warn)}button.bad{border-color:var(--bad)}
+select{background:#081221;border:1px solid var(--line);border-radius:8px;padding:4px 6px}
+input[type=range]{accent-color:var(--cyan);width:100%}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(320px,1fr);gap:12px;padding:10px}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:linear-gradient(180deg,rgba(13,30,48,.92),rgba(6,14,24,.92));border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px}
+.card h3{margin:0 0 6px;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--cyan);display:flex;align-items:center;gap:8px}
+.card h3 .chip{margin-left:auto}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:4px 0}
+.kv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:6px 0}
+.kv div{background:rgba(4,8,15,.55);border:1px solid rgba(56,217,255,.12);border-radius:8px;padding:4px 7px}
+.kv .l{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em}
+.kv .v{font-size:15px;font-variant-numeric:tabular-nums;color:#fff}
+.chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:600;border:1px solid}
+.c-ok{color:#aef5d2;border-color:var(--ok);background:rgba(61,220,151,.12)}
+.c-warn{color:#ffe3a6;border-color:var(--warn);background:rgba(255,200,87,.12)}
+.c-bad{color:#ffc0c9;border-color:var(--bad);background:rgba(255,93,115,.14)}
+.c-dim{color:var(--dim);border-color:rgba(127,167,184,.4)}
+.socbar{position:relative;height:16px;border-radius:6px;background:#071120;border:1px solid var(--line);overflow:hidden}
+.socbar .f{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#1f9e6e,#3ddc97)}
+.socbar .m{position:absolute;top:0;bottom:0;width:2px}
+.socbar .t{position:absolute;right:6px;top:0;font-size:11px;line-height:16px;color:#fff;font-variant-numeric:tabular-nums}
+#mapwrap{position:relative;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#000;touch-action:none}
+#map{display:block;width:100%;aspect-ratio:1/1;cursor:crosshair}
+.hud{position:absolute;pointer-events:none;background:rgba(4,8,15,.72);border:1px solid var(--line);border-radius:10px;padding:6px 9px;font-size:12px}
+#hudtl{left:8px;top:8px}#hudtr{right:8px;top:8px;text-align:right}
+#hudbl{left:8px;bottom:8px;max-width:62%;color:var(--dim)}
+#maptools{position:absolute;right:8px;bottom:8px;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+#maptools select,#maptools button{background:rgba(4,8,15,.85)}
+.clock{font-family:ui-monospace,"JetBrains Mono",monospace;font-size:20px;color:#fff;font-variant-numeric:tabular-nums}
+.prog{height:5px;border-radius:3px;background:#071120;overflow:hidden;margin:4px 0}.prog div{height:100%;background:var(--cyan)}
+#log{max-height:420px;overflow:auto;font-family:ui-monospace,monospace;font-size:11.5px}
+#log div{padding:1px 0;border-bottom:1px dashed rgba(56,217,255,.08)}
+#log .t{color:var(--dim)}
+.subs{max-height:170px;overflow:auto}
+.subs .s{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:12px}
+.subs .s span.n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.subs .s select{padding:1px 4px;font-size:11px}
+.small{font-size:11px;color:var(--dim)}
+.toast{position:fixed;left:50%;top:10px;transform:translateX(-50%);background:#0b2238;border:1px solid var(--cyan);border-radius:10px;padding:8px 14px;z-index:9;display:none}
+#endmodal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:10}
+#endmodal .card{max-width:460px}
+/* dashboard */
+#dash{padding:0 10px 10px}
+.slicers{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.slicers .g{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.slicers .g b{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-right:2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:8px}
+.kpi{background:linear-gradient(180deg,rgba(13,30,48,.9),rgba(6,14,24,.9));border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.kpi .l{font-size:10.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.07em}
+.kpi .v{font-size:20px;color:#fff;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:11px}
+.dgrid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:10px}
+@media (max-width:900px){.dgrid{grid-template-columns:1fr}}
+.chartbox{background:rgba(6,14,24,.8);border:1px solid var(--line);border-radius:12px;padding:4px}
+.crumb{font-size:12px;color:var(--dim)}.crumb b{color:var(--cyan)}
+#play.pulse{animation:pulse 1.4s ease-in-out infinite;border-color:var(--ok,#3ddc97)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(61,220,151,.55)}50%{box-shadow:0 0 0 6px rgba(61,220,151,0)}}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div id="endmodal"><div class="card"><h3>Mission complete</h3><div id="endbody"></div><div class="row"><button id="endclose">Review results</button><button id="endrestart" class="warn">Restart mission</button></div></div></div>
+
+<div id="sim" class="grid">
+  <div>
+    <div id="mapwrap">
+      <canvas id="map"></canvas>
+      <div class="hud" id="hudtl"></div>
+      <div class="hud" id="hudtr"></div>
+      <div id="maptools">
+        <select id="layer" title="Base layer">
+          <option value="relief">Relief (LOLA 80 m)</option><option value="slope">Slope hazard</option>
+          <option value="psr">Permanent shadow (PSR)</option><option value="sunvis">LOLA avg Sun visibility</option>
+          <option value="earthvis">LOLA avg Earth visibility</option>
+        </select>
+        <button id="tglShadow" class="on" title="Live terrain shadow from the current Sun position">☀ Live shadow</button>
+        <button id="tglRadio" title="Where Earth is below the local horizon right now">📡 Earth shadow</button>
+        <button id="zoomReset" title="Reset view">⤢</button>
+      </div>
+    </div>
+    <div class="small" style="margin:6px 2px">🖱 Click the map to drive the rover (diamonds = science targets) · Shift+click adds waypoints · Arrow keys / WASD drive ·
+      scroll to zoom, drag to pan · Space = pause · 1–7 = speed</div>
+    <div class="card" style="margin-top:6px">
+      <h3>Event log <span class="small" id="farsrc" style="margin-left:auto;text-transform:none;letter-spacing:0"></span></h3>
+      <div id="log"></div>
+    </div>
+  </div>
+  <div>
+    <div class="card">
+      <h3>⏱ Mission clock <span class="chip c-dim" id="missionStatus">READY</span></h3>
+      <div class="clock" id="clock">--</div>
+      <div class="prog"><div id="progbar" style="width:0"></div></div>
+      <div class="small" id="clocksub"></div>
+      <div class="row" id="speeds">
+        <button id="play" title="Space">▶ Play</button>
+        <button data-sp="60">1 min/s</button><button data-sp="600">10 min/s</button><button data-sp="3600" class="on">1 h/s</button>
+        <button data-sp="21600">6 h/s</button><button data-sp="86400">1 day/s</button><button data-sp="604800">1 wk/s</button><button data-sp="2592000">1 mo/s</button>
+      </div>
+      <div class="row" title="Fast-forward runs the full physics (batteries, heaters, rover) through the skipped time">
+        <button id="ffRise">⏭ Next sunrise</button><button id="ffSet">⏭ Next sunset</button><button id="ffDay">+1 day</button><button id="ffWeek">+1 week</button></div>
+      <div class="row"><button id="restart" class="warn">↺ Restart</button><button id="exportcsv">⬇ Log CSV</button>
+        <span class="small" id="savestate"></span></div>
+    </div>
+
+    <div class="card" id="roverCard">
+      <h3>🚙 Rover <span class="chip c-ok" id="rvStatus">DOCKED</span></h3>
+      <div class="socbar"><div class="f" id="rvSocF"></div><div class="m" id="rvSafe" style="background:var(--warn)"></div><div class="m" id="rvFloor" style="background:var(--bad)"></div><div class="t" id="rvSocT"></div></div>
+      <div class="kv">
+        <div><div class="l">Solar in</div><div class="v" id="rvGen">-</div></div>
+        <div><div class="l">Usage</div><div class="v" id="rvUse">-</div></div>
+        <div><div class="l">Net</div><div class="v" id="rvNet">-</div></div>
+        <div><div class="l">Battery left</div><div class="v" id="rvLeft">-</div></div>
+        <div><div class="l">Sun here</div><div class="v" id="rvSun">-</div></div>
+        <div><div class="l">Earth here</div><div class="v" id="rvEarth">-</div></div>
+        <div><div class="l">Slope / grade</div><div class="v" id="rvSlope">-</div></div>
+        <div><div class="l">Driven</div><div class="v" id="rvDist">-</div></div>
+        <div><div class="l">Data on board</div><div class="v" id="rvBuf">-</div></div>
+      </div>
+      <div class="row">
+        <button id="aDrill" title="TRIDENT 1 m drill (Honeybee, PRIME-1/VIPER): 200 W for 45 min - sample + 50 MB (+ target value)">⛏ TRIDENT drill</button>
+        <button id="aScan" title="NIRVSS near-IR spectrometer + lamps (VIPER): 40 W for 10 min - 5 MB (+ target value)">🔬 NIRVSS</button>
+        <button id="aMsolo" title="MSolo mass spectrometer (PRIME-1/VIPER): 25 W for 20 min - 10 MB (+ target value)">⚗ MSolo</button>
+        <button id="aNss" title="Neutron Spectrometer System (VIPER): 5 W for 60 min stationary count - 2 MB (+ target value)">☢ NSS</button>
+        <button id="aPano" title="Stereo NavCam panorama: 20 W for 15 min - 200 MB">📷 Panorama</button>
+        <button id="aStop">✋ Stop</button>
+      </div>
+      <div class="hint" style="font-size:11px;opacity:.75;margin:2px 0 6px">Instruments are modelled on VIPER / PRIME-1 hardware (rounded public power figures).</div>
+      <div class="row">
+        <button id="aHome">🏠 Return to outpost</button>
+        <button id="aDock" title="Charge from the outpost bus when within docking range">🔌 Dock & charge</button>
+        <button id="aHib" title="Only survival loads stay on">💤 Hibernate</button>
+        <button id="aDte" title="Low-gain direct-to-Earth when Earth is above the rover's own horizon">📡 Rover DTE</button>
+      </div>
+      <div class="row" style="gap:10px"><span class="small" style="min-width:120px">Speed <b id="spdV">0.10</b> m/s</span>
+        <input type="range" id="spd" min="0.02" max="0.30" step="0.01" value="0.10" style="flex:1"></div>
+      <div class="small" id="rvTask"></div>
+    </div>
+
+    <div class="card" id="outCard">
+      <h3>🏕 Outpost <span class="chip c-ok" id="opStatus">NOMINAL</span></h3>
+      <div class="socbar"><div class="f" id="opSocF"></div><div class="m" id="opSafe" style="background:var(--warn)"></div><div class="m" id="opFloor" style="background:var(--bad)"></div><div class="t" id="opSocT"></div></div>
+      <div class="kv">
+        <div><div class="l">Solar in (M4)</div><div class="v" id="opGen">-</div></div>
+        <div><div class="l">Usage</div><div class="v" id="opUse">-</div></div>
+        <div><div class="l">Net</div><div class="v" id="opNet">-</div></div>
+        <div><div class="l">Battery left</div><div class="v" id="opLeft">-</div></div>
+        <div><div class="l">Sun</div><div class="v" id="opSun">-</div></div>
+        <div><div class="l">Earth link</div><div class="v" id="opLink">-</div></div>
+        <div><div class="l">Heaters</div><div class="v" id="opHeat">-</div></div>
+        <div><div class="l">Data queued</div><div class="v" id="opBuf">-</div></div>
+        <div><div class="l">Sent to Earth</div><div class="v" id="opSent">-</div></div>
+      </div>
+      <div class="row">
+        <select id="sig" title="Signal type">
+          <option value="5">📡 Telemetry · 5 W RF</option><option value="20" selected>🔬 Science downlink · 20 W RF</option>
+          <option value="40">🎥 Video / high-rate · 40 W RF</option><option value="1">🆘 Emergency beacon · 1 W RF</option>
+          <option value="custom">⚙ Custom RF power</option>
+        </select>
+        <input type="range" id="rf" min="1" max="100" step="1" value="20" style="flex:1;min-width:90px" title="RF output power (W)">
+        <span class="small" id="rfV"></span>
+      </div>
+      <div class="row">
+        <button id="txNow">▶ Transmit 30 min</button><button id="txAuto" class="on">Auto downlink</button><button id="txOff">Radio off</button>
+        <span class="small" id="txInfo"></span>
+      </div>
+      <div class="row" style="gap:10px"><span class="small" style="min-width:140px">Heater set point <b id="setV">-20</b> °C</span>
+        <input type="range" id="setp" min="-40" max="20" step="1" value="-20" style="flex:1"></div>
+      <div class="small" style="margin:4px 0 2px">Subsystems (Auto = schedule from the M5 load table)</div>
+      <div class="subs" id="subs"></div>
+    </div>
+
+    <div class="card">
+      <h3>🔮 Forecast · time remaining</h3>
+      <div id="forecast" class="small" style="color:var(--txt);font-size:12.5px"></div>
+    </div>
+    <div class="card">
+      <h3>🏆 Mission score</h3>
+      <div class="kv">
+        <div><div class="l">Data to Earth</div><div class="v" id="scData">0</div></div>
+        <div><div class="l">Samples</div><div class="v" id="scSamp">0</div></div>
+        <div><div class="l">Targets</div><div class="v" id="scPoi">0</div></div>
+      </div>
+      <div class="small" id="scNote"></div>
+    </div>
+  </div>
+</div>
+
+<div id="dash">
+  <div class="card" style="margin-bottom:8px">
+    <h3>📊 Sunlight harvest → generation → usage <span class="small" style="margin-left:auto;text-transform:none;letter-spacing:0" id="dashSrc"></span></h3>
+    <div class="slicers">
+      <div class="g" id="slAsset"><b>Asset</b><button data-v="outpost" class="on">Outpost</button><button data-v="rover">Rover</button><button data-v="both">Combined</button></div>
+      <div class="g" id="slSource"><b>Data</b><button data-v="live" class="on">Live run</button><button data-v="plan">M5 plan</button></div>
+      <div class="g" id="slCats"><b>Usage</b></div>
+      <div class="g"><button id="drillUp" disabled>⤺ Drill up</button><span class="crumb" id="crumb"></span></div>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <div class="dgrid">
+      <div class="chartbox"><div id="chMain" style="height:470px"></div></div>
+      <div>
+        <div class="chartbox" style="margin-bottom:10px"><div id="chDonut" style="height:225px"></div></div>
+        <div class="chartbox"><div id="chDays" style="height:235px"></div></div>
+      </div>
+    </div>
+    <div class="small" style="margin-top:6px">Drag across the timeline (or use the range slider) to filter every card and chart. Click a usage slice to isolate it,
+      click a day to drill in. Harvest = sunlight striking the array; generation = electrical output after cells, temperature, dust, ageing and MPPT; usage = loads actually served.</div>
+  </div>
+</div>
+
+<script>window.P = /*__PAYLOAD__*/null;</script>
+<script id="engine">
+//<ENGINE>
+var ENG = (function () {
+  "use strict";
+  var R_MOON = 1737400, G_MOON = 1.62, SIGMA = 5.670374419e-8, D2R = Math.PI / 180;
+
+  function b64bytes(s) {
+    if (typeof atob === "function") {
+      var bin = atob(s), u = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+      return u;
+    }
+    return new Uint8Array(Buffer.from(s, "base64"));
+  }
+
+  function makeTerrain(D, farHz) {
+    var n = D.n, m = D.m, mpp = D.mpp, x0 = D.x0, y0 = D.y0;
+    var hb = b64bytes(D.h_i16), dv = new DataView(hb.buffer, hb.byteOffset, hb.byteLength);
+    var H = new Float32Array(n * m), hmax = -1e9, hmin = 1e9;
+    var off = D.h_off || 0, sc = D.h_scale || 1;
+    for (var i = 0; i < n * m; i++) { H[i] = off + sc * dv.getInt16(2 * i, true); if (H[i] > hmax) hmax = H[i]; if (H[i] < hmin) hmin = H[i]; }
+    function lay(k) { return D[k] ? b64bytes(D[k]) : null; }
+    var T = { n: n, m: m, mpp: mpp, x0: x0, y0: y0, H: H, hmax: hmax, hmin: hmin,
+      halfX: Math.abs(x0), halfY: Math.abs(y0), ln: D.lay_n, lm: D.lay_m,
+      psr: lay("psr_u8"), sunvis: lay("sunvis_u8"), earthvis: lay("earthvis_u8"),
+      far: Float32Array.from(farHz || new Array(360).fill(0)) };
+    T.h = function (x, y) {
+      var c = (x - x0) / mpp, r = (y0 - y) / mpp;
+      c = Math.min(Math.max(c, 0), m - 1.001); r = Math.min(Math.max(r, 0), n - 1.001);
+      var c0 = c | 0, r0 = r | 0, fc = c - c0, fr = r - r0, k = r0 * m + c0;
+      return H[k] * (1 - fc) * (1 - fr) + H[k + 1] * fc * (1 - fr) + H[k + m] * (1 - fc) * fr + H[k + m + 1] * fc * fr;
+    };
+    T.inside = function (x, y) { return Math.abs(x) <= T.halfX && Math.abs(y) <= T.halfY; };
+    T.grad = function (x, y) {
+      var d = mpp;
+      return [(T.h(x + d, y) - T.h(x - d, y)) / (2 * d), (T.h(x, y + d) - T.h(x, y - d)) / (2 * d)];
+    };
+    T.slope = function (x, y) { var g = T.grad(x, y); return Math.atan(Math.hypot(g[0], g[1])) / D2R; };
+    T.layer = function (arr, x, y) {
+      if (!arr) return 0;
+      var c = Math.round((x - x0) / (2 * mpp)), r = Math.round((y0 - y) / (2 * mpp));
+      if (c < 0 || r < 0 || c >= T.lm || r >= T.ln) return 0;
+      return arr[r * T.lm + c] / 255;
+    };
+    return T;
+  }
+
+  // 360 x 1-deg horizon profile at (x, y): max(near-field DEM ray-march, far-field mask). Same maths as sim_payload.cell_horizon.
+  function horizonProfile(T, x, y, obsH) {
+    var h0 = T.h(x, y) + obsH, out = new Float32Array(360), mpp = T.mpp;
+    var maxD = 3 * Math.max(T.halfX, T.halfY);
+    for (var k = 0; k < 360; k++) {
+      var a = k * D2R, sx = Math.sin(a), sy = Math.cos(a), best = -Infinity;
+      for (var d = mpp; d < maxD; d += mpp) {
+        var px = x + sx * d, py = y + sy * d;
+        if (Math.abs(px) > T.halfX || Math.abs(py) > T.halfY) break;
+        var e = Math.atan2(T.h(px, py) - h0 - d * d / (2 * R_MOON), d);
+        if (e > best) best = e;
+      }
+      var nf = best === -Infinity ? -90 : best / D2R;
+      out[k] = Math.max(nf, T.far[k]);
+    }
+    return out;
+  }
+  function hzAt(prof, az) {
+    az = ((az % 360) + 360) % 360;
+    var i = Math.floor(az), f = az - i;
+    return prof[i] * (1 - f) + prof[(i + 1) % 360] * f;
+  }
+  function localAlt(alt, az, x, y) { var a = az * D2R; return alt + (x * Math.sin(a) + y * Math.cos(a)) / R_MOON / D2R; }
+  function discFrac(alt, hz, r) {
+    if (!(r > 0)) return alt > hz ? 1 : 0;
+    return Math.min(1, Math.max(0, (alt - hz + r) / (2 * r)));
+  }
+
+  function makeClock(P) {
+    var S = P.s, n = P.n, stepH = P.step_min / 60;
+    function v(a, i) { var x = a[i]; return x == null ? 0 : x; }
+    function at(key, t) {
+      var a = S[key], f = t / stepH, i = Math.floor(f);
+      if (i < 0) return v(a, 0);
+      if (i >= n - 1) return v(a, n - 1);
+      var w = f - i; return v(a, i) + (v(a, i + 1) - v(a, i)) * w;
+    }
+    function atAz(key, t) {
+      var a = S[key], f = t / stepH, i = Math.floor(f);
+      if (i < 0) return v(a, 0);
+      if (i >= n - 1) return v(a, n - 1);
+      var w = f - i, A = v(a, i), B = v(a, i + 1), d = ((B - A + 540) % 360) - 180;
+      return (A + d * w + 360) % 360;
+    }
+    function idx(t) { return Math.min(n - 1, Math.max(0, Math.floor(t / stepH + 1e-9))); }
+    return { at: at, atAz: atAz, idx: idx, stepH: stepH, n: n, endH: (n - 1) * stepH, S: S };
+  }
+
+  function heaterW(th, lit, setC, envDarkC) {
+    if (th.enabled === false) return 0;
+    var ti = (setC != null ? setC : th.internal_min_temp_c) + 273.15;
+    var te = (lit ? th.env_temp_lit_c : (envDarkC != null ? envDarkC : th.env_temp_dark_c)) + 273.15;
+    var rad = th.mli_effective_emittance * SIGMA * th.radiating_area_m2 * Math.max(Math.pow(ti, 4) - Math.pow(te, 4), 0);
+    var cond = th.conductive_leak_w_per_k * Math.max(ti - te, 0);
+    return Math.max(rad + cond - (th.waste_heat_w || 0), 0) / Math.max(th.heater_efficiency || 1, 1e-6);
+  }
+
+  function schedOn(s, tH, sunlit, earth) {
+    if (tH < (s.start_h || 0) || tH >= (s.end_h == null ? 1e9 : s.end_h)) return false;
+    switch (s.schedule) {
+      case "sunlit": return !!sunlit;
+      case "dark": return !sunlit;
+      case "earth_visible": return !!earth;
+      case "duty": return (tH % s.duty_period_h) < s.duty_on_frac * s.duty_period_h;
+      default: return true;
+    }
+  }
+
+  // Mirrors clps_engine.energy.simulate (priority shedding: below safe SoC keep p<=2, at the DoD floor keep p1 only).
+  function batteryStep(B, st, gen, loads, h) {
+    var cap = B.capacity_wh, floor = cap * (1 - B.max_dod), safe = cap * Math.max(B.min_safe_soc, 1 - B.max_dod);
+    var sd = (B.self_discharge_pct_per_day || 0) / 100 / 24 * h;
+    var e = st.e;
+    e = Math.max(e - e * sd, Math.min(e, floor));
+    var allowed = e > safe ? 4 : (e > floor + 1e-9 ? 2 : 1);
+    var L = loads.length, want = new Array(L), served = new Array(L), demand = 0, i;
+    for (i = 0; i < L; i++) { want[i] = loads[i].p <= allowed ? loads[i].w : 0; served[i] = want[i]; demand += want[i]; }
+    var net = gen - demand, charge = 0, discharge = 0, clipped = 0, deficit = 0;
+    if (net >= 0) {
+      var c = Math.min(net, B.max_charge_w, h > 0 ? (cap - e) / (B.charge_efficiency * h) : 0);
+      c = Math.max(c, 0); e += c * B.charge_efficiency * h; charge = c; clipped = net - c;
+    } else {
+      var need = -net, avail = Math.max(0, (e - floor) * B.discharge_efficiency / h);
+      var d = Math.min(need, B.max_discharge_w, avail);
+      e -= d / B.discharge_efficiency * h; discharge = d;
+      var shortf = need - d;
+      if (shortf > 1e-9) {
+        var pr = [4, 3, 2, 1];
+        for (var q = 0; q < 4; q++) {
+          if (shortf <= 1e-9) break;
+          var p = pr[q], blk = 0;
+          for (i = 0; i < L; i++) if (loads[i].p === p) blk += served[i];
+          var cut = Math.min(blk, shortf);
+          if (blk > 0) for (i = 0; i < L; i++) if (loads[i].p === p) served[i] *= (blk - cut) / blk;
+          shortf -= cut;
+        }
+        var sv = 0; for (i = 0; i < L; i++) sv += served[i];
+        deficit = Math.max(shortf, 0) + (demand - sv);
+      }
+    }
+    var crit = 0;
+    for (i = 0; i < L; i++) { if (loads[i].p > allowed) deficit += loads[i].w; if (loads[i].p === 1) crit += loads[i].w - served[i]; }
+    st.e = e;
+    return { served: served, charge: charge, discharge: discharge, clipped: clipped, deficit: deficit, allowed: allowed,
+      shedding: allowed < 4, crit: crit > 1e-6, soc: e / cap, demand: demand };
+  }
+
+  function driveW(rv, v, gradeRad) {
+    var w = rv.mass_kg * G_MOON * (rv.crr * Math.cos(gradeRad) + Math.sin(gradeRad)) * v / Math.max(rv.drive_eff, 1e-3);
+    return Math.max(w, 0) + rv.drive_avionics_w;
+  }
+
+  // Outpost loads at time tH (no player overrides -> identical to the batch M5 subsystem schedule).
+  function outpostLoads(P, tH, sunlit, earth, ov, setC) {
+    var subs = P.outpost.subsystems, out = [];
+    for (var i = 0; i < subs.length; i++) {
+      var s = subs[i], mode = ov ? ov[i] : "auto", on = mode === "on" ? true : mode === "off" ? false : schedOn(s, tH, sunlit, earth);
+      var w = on ? s.active_w : (mode === "off" ? (s.priority === 1 ? s.standby_w : 0) : s.standby_w);
+      out.push({ name: s.name, w: w, p: s.priority, cat: s.category || "other" });
+    }
+    out.push({ name: "Survival heaters", w: heaterW(P.outpost.thermal, sunlit, setC), p: 1, cat: "thermal" });
+    return out;
+  }
+
+  function losClear(T, x1, y1, h1, x2, y2, h2) {
+    var d = Math.hypot(x2 - x1, y2 - y1); if (d < 1) return true;
+    var n = Math.ceil(d / T.mpp), za = T.h(x1, y1) + h1, zb = T.h(x2, y2) + h2;
+    for (var i = 1; i < n; i++) {
+      var f = i / n, s = d * f, x = x1 + (x2 - x1) * f, y = y1 + (y2 - y1) * f;
+      if (T.h(x, y) + s * (d - s) / (2 * R_MOON) > za + (zb - za) * f) return false;
+    }
+    return true;
+  }
+
+  return { R_MOON: R_MOON, D2R: D2R, b64bytes: b64bytes, makeTerrain: makeTerrain, horizonProfile: horizonProfile, hzAt: hzAt,
+    localAlt: localAlt, discFrac: discFrac, makeClock: makeClock, heaterW: heaterW, schedOn: schedOn, batteryStep: batteryStep,
+    driveW: driveW, outpostLoads: outpostLoads, losClear: losClear };
+})();
+if (typeof module !== "undefined") module.exports = ENG;
+//</ENGINE>
+</script>
+<script>
+(function () {
+"use strict";
+var P = window.P;
+if (!P) { document.body.innerHTML = "<p style='padding:20px'>No simulation payload.</p>"; return; }
+var MODE = P.mode || "sim";
+var E = ENG, C = E.makeClock(P), S = P.s, stepH = C.stepH;
+var T = P.dem ? E.makeTerrain(P.dem, P.far_hz) : null;
+var $ = function (id) { return document.getElementById(id); };
+var RV = P.rover, OB = P.outpost.battery;
+var RB = { capacity_wh: RV.battery_wh, initial_soc: 0.9, charge_efficiency: OB.charge_efficiency, discharge_efficiency: OB.discharge_efficiency,
+  max_dod: OB.max_dod, min_safe_soc: OB.min_safe_soc, max_charge_w: 600, max_discharge_w: 800, self_discharge_pct_per_day: OB.self_discharge_pct_per_day };
+var RTH = { enabled: true, radiating_area_m2: RV.radiating_m2, mli_effective_emittance: RV.mli_e, internal_min_temp_c: RV.set_c,
+  env_temp_dark_c: P.outpost.thermal.env_temp_dark_c, env_temp_lit_c: P.outpost.thermal.env_temp_lit_c, conductive_leak_w_per_k: 0.08, heater_efficiency: 1 };
+var TASKS = { drill: { label: "TRIDENT drilling", w: 200, min: 45, mb: 50, sample: 1 }, scan: { label: "NIRVSS spectrometer scan", w: 40, min: 10, mb: 5, sample: 0 },
+  msolo: { label: "MSolo mass-spec sniff", w: 25, min: 20, mb: 10, sample: 0 }, nss: { label: "NSS neutron count", w: 5, min: 60, mb: 2, sample: 0 },
+  pano: { label: "NavCam panorama", w: 20, min: 15, mb: 200, sample: 0 } };
+var SCI_MB_PER_WH = 0.1;          // ASSUMPTION - outpost science data yield per Wh of served science power
+var ROVER_DTE_FACTOR = Math.pow(10, (RV.dte_gain_dbi - P.outpost.comms.gain_dbi) / 10) * RV.dte_rf_w / P.outpost.comms.ref_rf_w;
+var fmtT = function (ms) { return new Date(ms).toISOString().slice(0, 16).replace("T", " "); };
+var iso = function (tH) { return new Date(P.t0_ms + tH * 3600e3).toISOString().slice(0, 19).replace("T", " "); };
+function fmtDur(h) {
+  if (h == null || !isFinite(h)) return "—";
+  if (h < 0) h = 0;
+  if (h < 1) return Math.round(h * 60) + " min";
+  if (h < 48) return Math.floor(h) + " h " + String(Math.round((h % 1) * 60)).padStart(2, "0") + " m";
+  return (h / 24).toFixed(1) + " d";
+}
+function fmtW(w) { return (Math.abs(w) >= 1000 ? (w / 1000).toFixed(2) + " kW" : w.toFixed(0) + " W"); }
+function fmtMB(mb) { return mb >= 1000 ? (mb / 1000).toFixed(2) + " GB" : mb.toFixed(mb < 10 ? 1 : 0) + " MB"; }
+function toast(msg) { var t = $("toast"); t.textContent = msg; t.style.display = "block"; clearTimeout(toast._h); toast._h = setTimeout(function () { t.style.display = "none"; }, 3200); }
+
+/* ---------------------------------------------------------------- state */
+function freshState() {
+  return {
+    v: 1, t: 0, playing: false, speed: 3600, ended: false,
+    rover: { x: 40, y: 0, hd: 90, e: RB.capacity_wh * RB.initial_soc, wp: [], trail: [[40, 0]], dist: 0, buf: 0, task: null,
+      hib: false, dock: true, dte: false, dead: false, critMin: 0, speed: RV.speed_m_s, samples: 0, stuck: "" },
+    out: { e: OB.capacity_wh * OB.initial_soc, buf: 0, sent: 0, tx: "auto", txRem: 0, rf: 20, sig: "20", setC: P.outpost.thermal.internal_min_temp_c,
+      ov: P.outpost.subsystems.map(function () { return "auto"; }), lost: false },
+    poiDone: {}, log: [], rows: [], acc: null, minSocO: 100, minSocR: 100,
+    flags: {}
+  };
+}
+var KEY = "lnx-sim:" + P.site.id + ":" + P.t0_ms + ":" + P.n + ":" + JSON.stringify(P.outpost.battery).length + ":" + P.outpost.subsystems.length +
+  ":" + Math.round(P.outpost.battery.capacity_wh) + ":" + Math.round(P.outpost.array.area_m2 * 100);
+var G = freshState(), resumed = false;
+if (MODE === "sim") {
+  try { var sv = localStorage.getItem(KEY); if (sv) { var o = JSON.parse(sv); if (o && o.v === 1) { G = o; G.playing = false; resumed = true; } } } catch (e) {}
+}
+function save() {
+  if (MODE !== "sim") return;
+  try { localStorage.setItem(KEY, JSON.stringify(G)); $("savestate").textContent = "autosaved " + new Date().toLocaleTimeString(); } catch (e) { $("savestate").textContent = ""; }
+}
+function logEv(icon, msg, cls) {
+  G.log.unshift({ t: G.t, i: icon, m: msg, c: cls || "" });
+  if (G.log.length > 300) G.log.length = 300;
+  renderLog();
+}
+function renderLog() {
+  $("log").innerHTML = G.log.slice(0, 120).map(function (e) {
+    var col = e.c === "bad" ? "var(--bad)" : e.c === "warn" ? "var(--warn)" : e.c === "ok" ? "var(--ok)" : "var(--txt)";
+    return "<div><span class='t'>" + iso(e.t).slice(5, 16) + "</span> " + e.i + " <span style='color:" + col + "'>" + e.m + "</span></div>";
+  }).join("");
+}
+
+/* ---------------------------------------------------------------- environment at a point */
+var profCache = new Map();
+function profileAt(x, y) {
+  if (!T) return null;
+  var k = Math.round(x / T.mpp) + "," + Math.round(y / T.mpp);
+  var p = profCache.get(k);
+  if (!p) {
+    p = E.horizonProfile(T, Math.round(x / T.mpp) * T.mpp, Math.round(y / T.mpp) * T.mpp, 1.5);
+    profCache.set(k, p);
+    if (profCache.size > 400) profCache.delete(profCache.keys().next().value);
+  }
+  return p;
+}
+function envAt(x, y, t, prof) {
+  var sAlt = C.at("sun_alt", t), sAz = C.atAz("sun_az", t), eAlt = C.at("earth_alt", t), eAz = C.atAz("earth_az", t);
+  if (!prof) {   // no DEM: fall back to site values
+    return { sunFrac: C.at("site_sunfrac", t), earth: S.site_earth[C.idx(t)] === 1, sAlt: sAlt, sAz: sAz, eAlt: eAlt, eAz: eAz, hzS: C.at("site_hz_sun", t) };
+  }
+  var la = E.localAlt(sAlt, sAz, x, y), hzS = E.hzAt(prof, sAz);
+  var le = E.localAlt(eAlt, eAz, x, y), hzE = E.hzAt(prof, eAz);
+  return { sunFrac: E.discFrac(la, hzS, C.at("sun_r", t)), earth: le + C.at("earth_r", t) > hzE, sAlt: la, sAz: sAz, eAlt: le, eAz: eAz, hzS: hzS, hzE: hzE };
+}
+function siteEnv(t) {
+  var i = C.idx(t);
+  return { sunFrac: C.at("site_sunfrac", t), sunlit: P.plan.sunlit[i] === 1, earth: S.site_earth[i] === 1 };
+}
+function linkRate(t, rfW) {
+  var i = C.idx(t), base = S.rate_pot[i] || 0;
+  return Math.min(base * rfW / P.outpost.comms.ref_rf_w, P.outpost.comms.max_rate_bps);
+}
+
+/* ---------------------------------------------------------------- one physics step (h hours) */
+var lastStep = null;
+function step(h) {
+  var t = G.t, rv = G.rover, op = G.out;
+  var se = siteEnv(t), opGen = C.at("out_gen", t), opHarv = C.at("out_harvest", t);
+  // ---------- rover environment
+  var prof = profileAt(rv.x, rv.y), env = envAt(rv.x, rv.y, t, prof);
+  var irr = C.at("irr", t), ceff = C.at("cell_eff", t);
+  var cosI = Math.cos(Math.max(env.sAlt, 0) * E.D2R);
+  var rvHarv = irr * RV.panel_m2 * cosI * env.sunFrac;
+  var rvGen = rvHarv * ceff * RV.dust * RV.age * RV.mppt * RV.panel_eff_scale;
+  var inPsr = T ? T.layer(T.psr, rv.x, rv.y) > 0.5 : false;
+  var lit = env.sunFrac > 0.5;
+  var dOut = Math.hypot(rv.x, rv.y);
+  var canDock = dOut <= RV.dock_m;
+  if (rv.dock && !canDock) rv.dock = false;
+  // ---------- rover intent
+  var moving = false, gradeRad = 0, v = rv.speed, slopeHere = T ? T.slope(rv.x, rv.y) : 0, tgt = rv.wp[0];
+  if (!rv.dead && !rv.hib && !rv.task && tgt) {
+    var dx = tgt.x - rv.x, dy = tgt.y - rv.y, dd = Math.hypot(dx, dy);
+    if (dd < 3) { rv.wp.shift(); if (!rv.wp.length) { logEv("📍", "Rover arrived at waypoint", "ok"); arriveCheck(); } }
+    else {
+      rv.hd = Math.atan2(dx, dy) / E.D2R;
+      var ux = dx / dd, uy = dy / dd, look = T ? T.mpp : 40;
+      var nx = rv.x + ux * look, ny = rv.y + uy * look;
+      if (T && !T.inside(nx, ny)) { rv.wp = []; logEv("⛔", "Edge of the 24 km terrain model - rover stopped", "warn"); }
+      else {
+        var g = T ? T.grad(rv.x, rv.y) : [0, 0];
+        gradeRad = Math.atan(g[0] * ux + g[1] * uy);
+        var sAhead = T ? T.slope(nx, ny) : 0;
+        if (sAhead > RV.max_slope_deg) {
+          if (rv.stuck !== "slope") logEv("⛰", "Slope ahead " + sAhead.toFixed(0) + "° > " + RV.max_slope_deg + "° limit - pick another route", "warn");
+          rv.stuck = "slope"; rv.wp = [];
+        } else {
+          rv.stuck = ""; moving = true;
+          if (sAhead > 15) v *= 0.5;
+        }
+      }
+    }
+  }
+  var pDrive = moving ? E.driveW(RV, v, gradeRad) : 0;
+  var envDark = inPsr ? -230 : null;
+  var rLoads = [
+    { name: "Rover avionics", w: rv.hib ? 5 : 15, p: 1, cat: "computing" },
+    { name: "Keep-alive", w: 2, p: 1, cat: "standby" },
+    { name: "UHF receiver", w: 2, p: 1, cat: "comms" },
+    { name: "Rover heaters", w: 0, p: 1, cat: "thermal" },
+    { name: "Drive + hazcams", w: pDrive, p: 3, cat: "mobility" },
+    { name: "Headlights", w: moving && !lit ? 20 : 0, p: 3, cat: "mobility" },
+    { name: "Task", w: rv.task ? TASKS[rv.task.k].w : 0, p: 3, cat: "science" },
+    { name: "UHF relay to outpost", w: 0, p: 2, cat: "comms" },
+    { name: "Rover DTE", w: 0, p: 2, cat: "comms" }
+  ];
+  var heat = E.heaterW(RTH, lit, RV.set_c, envDark);
+  heat = Math.max(0, heat - 0.5 * (pDrive + rLoads[6].w));      // ASSUMPTION - half of motor/instrument dissipation stays inside the warm box
+  rLoads[3].w = heat;
+  var uhfOk = !rv.hib && rv.buf > 0.01 && dOut <= RV.uhf_range_m && (!T || dOut < 60 || E.losClear(T, rv.x, rv.y, 1.5, 0, 0, 3));
+  if (uhfOk) rLoads[7].w = RV.uhf_dc_w;
+  var dteRate = 0;
+  if (rv.dte && !rv.hib && rv.buf > 0.01 && env.earth) { dteRate = (S.rate_pot[C.idx(t)] || 0) * ROVER_DTE_FACTOR; if (dteRate > 0) rLoads[8].w = RV.dte_rf_w / 0.35 + 3; }
+  // ---------- outpost loads (+ comms + rover charging)
+  var oLoads = E.outpostLoads(P, t, se.sunlit, se.earth, op.ov, op.setC);
+  var linkUp = se.earth && (S.rate_pot[C.idx(t)] || 0) > 0, relay = S.relay[C.idx(t)] || 0;
+  var txWant = op.tx === "manual" ? op.txRem > 0 : op.tx === "auto" ? op.buf > 0.5 : false;
+  var txW = 0, txRate = 0;
+  if (txWant && !op.lost && (linkUp || relay > 0)) {
+    txRate = (linkUp ? linkRate(t, op.rf) : 0) + relay;
+    txW = op.rf / P.outpost.comms.sspa_eff + P.outpost.comms.exciter_w;
+  }
+  oLoads.push({ name: "DTE transmitter", w: txW, p: 2, cat: "comms" });
+  var dockW = rv.dock && canDock && !rv.dead ? Math.min(RV.dock_w, Math.max(0, (RB.capacity_wh - rv.e) / (h * 0.9) )) : 0;
+  oLoads.push({ name: "Rover charging", w: dockW, p: 3, cat: "rover dock" });
+  // ---------- battery steps
+  var ro = E.batteryStep(OB, op, op.lost ? 0 : opGen, oLoads, h);
+  var dockIn = ro.served[oLoads.length - 1] * 0.9;
+  var rr = rv.dead ? null : E.batteryStep(RB, rv, rvGen + dockIn, rLoads, h);
+  // ---------- consequences
+  if (rr) {
+    var drv = rr.served[4] >= pDrive - 1e-6 && pDrive > 0;
+    if (moving && drv) {
+      var stepM = v * h * 3600, tg = rv.wp[0], dd2 = Math.hypot(tg.x - rv.x, tg.y - rv.y), mv = Math.min(stepM, dd2);
+      rv.x += (tg.x - rv.x) / dd2 * mv; rv.y += (tg.y - rv.y) / dd2 * mv; rv.dist += mv;
+      var lt = rv.trail[rv.trail.length - 1];
+      if (Math.hypot(lt[0] - rv.x, lt[1] - rv.y) > 30) { rv.trail.push([Math.round(rv.x), Math.round(rv.y)]); if (rv.trail.length > 3000) rv.trail.shift(); }
+    } else if (moving && !drv && !G.flags.shedDrive) { G.flags.shedDrive = 1; logEv("⚠", "Rover drive shed - battery below safe SoC", "warn"); }
+    if (drv) G.flags.shedDrive = 0;
+    if (rv.task) {
+      var taskOk = rr.served[6] >= TASKS[rv.task.k].w - 1e-6;
+      if (taskOk) rv.task.rem -= h * 60;
+      if (rv.task.rem <= 0) finishTask();
+    }
+    if (uhfOk && rr.served[7] > 0) { var mb = Math.min(rv.buf, RV.uhf_rate_bps * h * 3600 / 8e6); rv.buf -= mb; op.buf += mb; }
+    if (dteRate > 0 && rr.served[8] > 0) { var mb2 = Math.min(rv.buf, dteRate * h * 3600 / 8e6); rv.buf -= mb2; op.sent += mb2; }
+    rv.critMin = rr.crit ? rv.critMin + h * 60 : 0;
+    if (rv.critMin >= 120 && !rv.dead) { rv.dead = true; rv.wp = []; rv.task = null; logEv("❄", "ROVER LOST - survival heaters unpowered for 2 h, electronics frozen", "bad"); }
+  }
+  if (txW > 0) {
+    var frac = ro.served[oLoads.length - 2] / txW;
+    var mbx = Math.min(op.buf, txRate * frac * h * 3600 / 8e6);
+    op.buf -= mbx; op.sent += mbx;
+    if (op.tx === "manual") { op.txRem -= h * 60; if (op.txRem <= 0) { op.tx = "off"; logEv("📡", "Manual transmission complete", "ok"); syncTx(); } }
+  }
+  // outpost science data yield
+  var sciWh = 0; for (var i = 0; i < oLoads.length; i++) if (oLoads[i].cat === "science") sciWh += ro.served[i] * h;
+  op.buf += sciWh * SCI_MB_PER_WH;
+  if (ro.crit) { G.flags.opCrit = (G.flags.opCrit || 0) + h; if (G.flags.opCrit >= 2 && !op.lost) { op.lost = true; logEv("☠", "OUTPOST LOST - critical loads unpowered for 2 h", "bad"); } }
+  else G.flags.opCrit = 0;
+  G.minSocO = Math.min(G.minSocO, ro.soc * 100);
+  if (rr) G.minSocR = Math.min(G.minSocR, rr.soc * 100);
+  // ---------- transitions -> event log
+  edge("rvSun", lit, "☀", "Sunrise at the rover", "🌑", "Sunset at the rover - running on battery");
+  edge("opSun", se.sunlit, "☀", "Sunrise at the outpost", "🌑", "Sunset at the outpost");
+  edge("link", linkUp, "📶", "Earth link AOS via " + P.stations[S.station[C.idx(t)]], "📴", "Earth link LOS");
+  edge("rvEarth", env.earth, "🌍", "Earth rose above the rover's horizon", "🌍", "Earth set behind terrain at the rover");
+  edge("opShed", ro.shedding, "⚠", "Outpost below safe SoC - science shed", "✅", "Outpost back above safe SoC", true);
+  if (rr) edge("rvShed", rr.shedding, "⚠", "Rover below safe SoC - mobility & science shed", "✅", "Rover back above safe SoC", true);
+  edge("psr", inPsr, "🧊", "Rover entered permanent shadow (−230 °C sink)", "🌤", "Rover left permanent shadow");
+  // ---------- log row accumulation (one row per base time step)
+  var a = G.acc || (G.acc = { k: C.idx(t), n: 0, oh: 0, og: 0, rh: 0, rg: 0, ou: {}, ru: {}, osoc: 0, rsoc: 0, od: 0, rd: 0, oc: 0, rc: 0, lit: 0 });
+  a.n += h; a.oh += opHarv * h; a.og += (op.lost ? 0 : opGen) * h; a.rh += rvHarv * h; a.rg += rvGen * h;
+  a.od += ro.deficit * h; a.oc += ro.clipped * h; a.lit += (se.sunlit ? 1 : 0) * h;
+  oLoads.forEach(function (l, j) { a.ou[l.cat] = (a.ou[l.cat] || 0) + ro.served[j] * h; });
+  if (rr) { rLoads.forEach(function (l, j) { a.ru[l.cat] = (a.ru[l.cat] || 0) + rr.served[j] * h; }); a.rd += rr.deficit * h; a.rc += rr.clipped * h; }
+  a.osoc = ro.soc * 100; a.rsoc = rr ? rr.soc * 100 : 0;
+  lastStep = { se: se, env: env, opGen: opGen, rvGen: rvGen, ro: ro, rr: rr, oLoads: oLoads, rLoads: rLoads, linkUp: linkUp, txW: txW, txRate: txRate,
+    dteRate: dteRate, uhfOk: uhfOk, slope: slopeHere, grade: gradeRad / E.D2R, pDrive: pDrive, inPsr: inPsr, dockW: dockW, canDock: canDock, heat: heat };
+  G.t = t + h;
+  if (C.idx(G.t) !== a.k || G.t >= C.endH) flushRow();
+}
+function rowOf(a) {
+  if (!a || a.n <= 0) return null;
+  var r = { k: a.k, oh: a.oh / a.n, og: a.og / a.n, rh: a.rh / a.n, rg: a.rg / a.n, ou: {}, ru: {}, os: +a.osoc.toFixed(2), rs: +a.rsoc.toFixed(2),
+    od: a.od / a.n, rd: a.rd / a.n, oc: a.oc / a.n, rc: a.rc / a.n, lit: a.lit / a.n };
+  for (var k in a.ou) r.ou[k] = +(a.ou[k] / a.n).toFixed(2);
+  for (var k2 in a.ru) r.ru[k2] = +(a.ru[k2] / a.n).toFixed(2);
+  ["oh", "og", "rh", "rg", "od", "rd", "oc", "rc"].forEach(function (f) { r[f] = +r[f].toFixed(2); });
+  return r;
+}
+function flushRow() {
+  var r = rowOf(G.acc); G.acc = null; if (!r) return;
+  if (G.rows.length && G.rows[G.rows.length - 1].k === r.k) G.rows[G.rows.length - 1] = r; else G.rows.push(r);
+}
+function allRows() { var r = rowOf(G.acc), rows = G.rows.slice(); if (r) rows.push(r); return rows; }
+function edge(key, val, i1, m1, i0, m0, quietStart) {
+  var prev = G.flags["e_" + key];
+  if (prev === undefined) { G.flags["e_" + key] = val; return; }
+  if (prev !== val) { G.flags["e_" + key] = val; if (val) logEv(i1, m1, quietStart ? "warn" : "ok"); else logEv(i0, m0, quietStart ? "ok" : "warn"); }
+}
+function nearestPoi(x, y, r) {
+  var best = null, bd = r;
+  (P.pois || []).forEach(function (p) { var d = Math.hypot(p.x - x, p.y - y); if (d < bd) { bd = d; best = p; } });
+  return best;
+}
+function arriveCheck() {
+  var p = nearestPoi(G.rover.x, G.rover.y, 150);
+  if (p && !G.poiDone[p.id]) logEv("🎯", "At " + p.id + " · " + p.label + " - run TRIDENT, NIRVSS, MSolo or NSS here (worth " + p.value_mb + " MB)", "ok");
+}
+function finishTask() {
+  var rv = G.rover, tk = TASKS[rv.task.k], p = nearestPoi(rv.x, rv.y, 150), mb = tk.mb, msg = tk.label + " complete";
+  if (p && !G.poiDone[p.id] && rv.task.k !== "pano") { mb += p.value_mb; G.poiDone[p.id] = 1; msg += " at " + p.id + " (" + p.label.split(" - ")[0] + ") +" + p.value_mb + " MB"; }
+  if (tk.sample) { rv.samples += 1; msg += " · sample #" + rv.samples; }
+  rv.buf += mb; rv.task = null; logEv("✅", msg + " · " + mb + " MB stored", "ok");
+}
+
+/* ---------------------------------------------------------------- forecasts */
+var FC = { t: -1 };
+function forecast() {
+  var t = G.t, rv = G.rover, op = G.out, out = {};
+  var i0 = C.idx(t), n = C.n, prof = profileAt(rv.x, rv.y);
+  // next sun / earth transitions at the rover's current position and at the outpost
+  function nextChange(fn) { var v0 = fn(i0); for (var i = i0 + 1; i < n; i++) if (fn(i) !== v0) return { h: i * stepH - t, to: fn(i) }; return null; }
+  var rvSun = function (i) { return envAt(rv.x, rv.y, i * stepH, prof).sunFrac > 0.5; };
+  var rvEar = function (i) { return envAt(rv.x, rv.y, i * stepH, prof).earth; };
+  out.rvSun = nextChange(rvSun); out.rvEarth = nextChange(rvEar);
+  out.opSun = nextChange(function (i) { return P.plan.sunlit[i] === 1; });
+  out.link = nextChange(function (i) { return S.site_earth[i] === 1 && (S.rate_pot[i] || 0) > 0; });
+  // outpost projection with the current switches (radio off, rover not charging)
+  var st = { e: op.e }, proj = [], tSafe = null, tCrit = null, minS = 100;
+  for (var i = i0; i < n; i++) {
+    var tt = i * stepH, sl = P.plan.sunlit[i] === 1;
+    var r = E.batteryStep(OB, st, op.lost ? 0 : (S.out_gen[i] || 0), E.outpostLoads(P, tt, sl, S.site_earth[i] === 1, op.ov, op.setC), stepH);
+    proj.push(+(r.soc * 100).toFixed(2)); minS = Math.min(minS, r.soc * 100);
+    if (tSafe == null && r.shedding) tSafe = tt - t;
+    if (tCrit == null && r.crit) tCrit = tt - t;
+  }
+  out.opProj = proj; out.opProjK = i0; out.opMin = minS; out.opSafe = tSafe; out.opCrit = tCrit;
+  // rover parked here, idle (avionics + heaters only)
+  if (!rv.dead) {
+    var rs = { e: rv.e }, rproj = [], rCrit = null, rSafe = null, rMin = 100;
+    for (var j = i0; j < n; j++) {
+      var tj = j * stepH, en = envAt(rv.x, rv.y, tj, prof), litj = en.sunFrac > 0.5;
+      var g = C.at("irr", tj) * RV.panel_m2 * Math.cos(Math.max(en.sAlt, 0) * E.D2R) * en.sunFrac * C.at("cell_eff", tj) * RV.dust * RV.age * RV.mppt * RV.panel_eff_scale;
+      var inP = T ? T.layer(T.psr, rv.x, rv.y) > 0.5 : false;
+      var L = [{ w: rv.hib ? 5 : 15, p: 1 }, { w: 4, p: 1 }, { w: E.heaterW(RTH, litj, RV.set_c, inP ? -230 : null), p: 1 }];
+      var rr = E.batteryStep(RB, rs, g, L, stepH);
+      rproj.push(+(rr.soc * 100).toFixed(2)); rMin = Math.min(rMin, rr.soc * 100);
+      if (rSafe == null && rr.shedding) rSafe = tj - t;
+      if (rCrit == null && rr.crit) rCrit = tj - t;
+    }
+    out.rvProj = rproj; out.rvMin = rMin; out.rvCrit = rCrit; out.rvSafe = rSafe;
+  }
+  out.t = t; FC = out;
+  renderForecast();
+}
+function renderForecast() {
+  var f = FC, rv = G.rover, lines = [];
+  function ch(x, on, off) { return x ? (x.to ? on : off) + " in <b>" + fmtDur(x.h) + "</b>" : "no change before mission end"; }
+  lines.push("⏳ Mission time remaining: <b>" + fmtDur(C.endH - G.t) + "</b>");
+  lines.push("🚙 Rover here: " + ch(f.rvSun, "☀ sunrise", "🌑 sunset") + " · " + ch(f.rvEarth, "🌍 Earthrise", "🌍 Earthset"));
+  if (!rv.dead) lines.push("🚙 If parked here (idle): min SoC <b>" + f.rvMin.toFixed(0) + "%</b> · " +
+    (f.rvCrit != null ? "<span style='color:var(--bad)'>freezes in " + fmtDur(f.rvCrit) + "</span>" : f.rvSafe != null ? "<span style='color:var(--warn)'>below safe in " + fmtDur(f.rvSafe) + "</span>" : "<span style='color:var(--ok)'>survives to mission end</span>"));
+  lines.push("🏕 Outpost: " + ch(f.opSun, "☀ sunrise", "🌑 sunset") + " · " + ch(f.link, "📶 link AOS", "📴 link LOS"));
+  lines.push("🏕 Projected with current switches (radio off): min SoC <b>" + f.opMin.toFixed(0) + "%</b> · " +
+    (f.opCrit != null ? "<span style='color:var(--bad)'>critical in " + fmtDur(f.opCrit) + "</span>" : f.opSafe != null ? "<span style='color:var(--warn)'>below safe in " + fmtDur(f.opSafe) + "</span>" : "<span style='color:var(--ok)'>never below safe</span>"));
+  $("forecast").innerHTML = lines.join("<br>");
+}
+
+/* ---------------------------------------------------------------- map rendering */
+var cv = $("map"), ctx = cv.getContext("2d"), view = { z: 1, cx: 0, cy: 0 }, baseImg = null, shadowImg = null, radioImg = null;
+var shadowKey = "", radioKey = "", lastShadowAt = 0;
+function sizeCanvas() {
+  var r = cv.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.width * dpr);
+}
+function colorRamp(stops, v) {
+  v = Math.min(1, Math.max(0, v));
+  for (var i = 1; i < stops.length; i++) if (v <= stops[i][0]) {
+    var a = stops[i - 1], b = stops[i], f = (v - a[0]) / (b[0] - a[0] || 1);
+    return [a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f, a[3] + (b[3] - a[3]) * f];
+  }
+  var l = stops[stops.length - 1]; return [l[1], l[2], l[3]];
+}
+function buildBase(layer) {
+  if (!T) return;
+  var n = T.n, m = T.m, c = document.createElement("canvas"); c.width = m; c.height = n;
+  var g = c.getContext("2d"), im = g.createImageData(m, n), H = T.H, mpp = T.mpp;
+  var la = 315 * E.D2R, le = 35 * E.D2R, lx = Math.cos(le) * Math.sin(la), ly = Math.cos(le) * Math.cos(la), lz = Math.sin(le);
+  for (var r = 0; r < n; r++) for (var q = 0; q < m; q++) {
+    var k = r * m + q, qa = Math.max(q - 1, 0), qb = Math.min(q + 1, m - 1), ra = Math.max(r - 1, 0), rb = Math.min(r + 1, n - 1);
+    var gx = (H[r * m + qb] - H[r * m + qa]) / ((qb - qa) * mpp), gy = (H[ra * m + q] - H[rb * m + q]) / ((rb - ra) * mpp);
+    var nn = Math.sqrt(gx * gx + gy * gy + 1), sh = Math.max(0, (-gx * lx - gy * ly + lz) / nn);
+    var slope = Math.atan(Math.hypot(gx, gy)) / E.D2R, base = 40 + 190 * sh, col;
+    var x = T.x0 + q * mpp, y = T.y0 - r * mpp;
+    if (layer === "slope") col = slope < 10 ? [61, 220, 151] : slope < 15 ? [255, 213, 74] : slope < 25 ? [255, 140, 66] : [255, 70, 90];
+    else if (layer === "psr") col = T.layer(T.psr, x, y) > 0.5 ? [60, 120, 255] : null;
+    else if (layer === "sunvis") col = colorRamp([[0, 20, 10, 40], [0.3, 160, 60, 40], [0.6, 255, 190, 60], [1, 255, 255, 200]], T.layer(T.sunvis, x, y) / 0.8);
+    else if (layer === "earthvis") col = colorRamp([[0, 10, 10, 40], [0.5, 40, 120, 220], [1, 160, 230, 255]], T.layer(T.earthvis, x, y) / 0.7);
+    var R, Gc, B;
+    if (!col) { R = Gc = B = base; }
+    else if (layer === "psr") { R = base * 0.35 + col[0] * 0.4; Gc = base * 0.35 + col[1] * 0.4; B = base * 0.35 + col[2] * 0.6; }
+    else { var w = layer === "slope" ? 0.45 : 0.6; R = base * (1 - w) + col[0] * w * (0.45 + 0.55 * sh); Gc = base * (1 - w) + col[1] * w * (0.45 + 0.55 * sh); B = base * (1 - w) + col[2] * w * (0.45 + 0.55 * sh); }
+    im.data[4 * k] = R; im.data[4 * k + 1] = Gc; im.data[4 * k + 2] = B; im.data[4 * k + 3] = 255;
+  }
+  g.putImageData(im, 0, 0); baseImg = c;
+}
+// Live cast-shadow mask at half resolution: ray-march the DEM toward the body + far-field mask. Returns a canvas.
+function castMask(alt, az, rad, rgba) {
+  var s = 2, n = Math.ceil(T.n / s), m = Math.ceil(T.m / s), c = document.createElement("canvas"); c.width = m; c.height = n;
+  var g = c.getContext("2d"), im = g.createImageData(m, n), a = az * E.D2R, sx = Math.sin(a), sy = Math.cos(a), farH = E.hzAt(T.far, az);
+  var stp = T.mpp * 2, maxD = 3 * T.halfX;
+  for (var r = 0; r < n; r++) for (var q = 0; q < m; q++) {
+    var x = T.x0 + q * s * T.mpp, y = T.y0 - r * s * T.mpp, la = E.localAlt(alt, az, x, y) + rad, blocked = la < farH;
+    if (!blocked) {
+      var h0 = T.h(x, y) + 1.5, ta = Math.tan(la * E.D2R);
+      for (var d = stp; d < maxD; d += (d < 2000 ? stp : d < 6000 ? 2 * stp : 4 * stp)) {
+        var px = x + sx * d, py = y + sy * d;
+        if (Math.abs(px) > T.halfX || Math.abs(py) > T.halfY) break;
+        var need = h0 + d * ta + d * d / (2 * E.R_MOON);
+        if (need > T.hmax + 50) break;
+        if (T.h(px, py) > need) { blocked = true; break; }
+      }
+    }
+    var k = 4 * (r * m + q);
+    if (blocked) { im.data[k] = rgba[0]; im.data[k + 1] = rgba[1]; im.data[k + 2] = rgba[2]; im.data[k + 3] = rgba[3]; }
+  }
+  g.putImageData(im, 0, 0); return c;
+}
+function w2s(x, y) {   // world metres -> canvas pixels
+  var W = cv.width, sc = W / (2 * T.halfX) * view.z;
+  return [W / 2 + (x - view.cx) * sc, W / 2 - (y - view.cy) * sc];
+}
+function s2w(px, py) {
+  var W = cv.width, sc = W / (2 * T.halfX) * view.z;
+  return [view.cx + (px - W / 2) / sc, view.cy - (py - W / 2) / sc];
+}
+var showShadow = true, showRadio = false;
+function updateShadows(force) {
+  if (!T) return;
+  var now = performance.now(), t = G.t, sAlt = C.at("sun_alt", t), sAz = C.atAz("sun_az", t);
+  var key = sAz.toFixed(1) + "|" + sAlt.toFixed(2);
+  if (showShadow && (force || (key !== shadowKey && now - lastShadowAt > 220))) {
+    shadowImg = castMask(sAlt, sAz, C.at("sun_r", t), [0, 4, 18, 175]); shadowKey = key; lastShadowAt = now;
+  }
+  if (showRadio) {
+    var eAlt = C.at("earth_alt", t), eAz = C.atAz("earth_az", t), k2 = eAz.toFixed(0) + "|" + eAlt.toFixed(1);
+    if (force || k2 !== radioKey) { radioImg = castMask(eAlt, eAz, C.at("earth_r", t), [150, 60, 255, 95]); radioKey = k2; }
+  }
+}
+function drawMap() {
+  if (!T) { ctx.fillStyle = "#000"; ctx.fillRect(0, 0, cv.width, cv.height); ctx.fillStyle = "#7fa7b8"; ctx.fillText("No DEM for this point", 20, 30); return; }
+  var W = cv.width, dpr = W / cv.getBoundingClientRect().width;
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, W);
+  var p0 = w2s(T.x0, T.y0), p1 = w2s(-T.x0, -T.y0);
+  ctx.imageSmoothingEnabled = true;
+  if (baseImg) ctx.drawImage(baseImg, p0[0], p0[1], p1[0] - p0[0], p1[1] - p0[1]);
+  if (showShadow && shadowImg) ctx.drawImage(shadowImg, p0[0], p0[1], p1[0] - p0[0], p1[1] - p0[1]);
+  if (showRadio && radioImg) ctx.drawImage(radioImg, p0[0], p0[1], p1[0] - p0[0], p1[1] - p0[1]);
+  var rv = G.rover, sc = W / (2 * T.halfX) * view.z;
+  // UHF range
+  ctx.strokeStyle = "rgba(56,217,255,.25)"; ctx.setLineDash([6 * dpr, 6 * dpr]); ctx.lineWidth = dpr;
+  var o = w2s(0, 0); ctx.beginPath(); ctx.arc(o[0], o[1], RV.uhf_range_m * sc, 0, 2 * Math.PI); ctx.stroke(); ctx.setLineDash([]);
+  // POIs
+  ctx.font = (11 * dpr) + "px Segoe UI, sans-serif";
+  (P.pois || []).forEach(function (p) {
+    var q = w2s(p.x, p.y), done = G.poiDone[p.id], col = { psr: "#6fa8ff", ridge: "#ffd54a", earth: "#4aa8ff", outcrop: "#ff8c42" }[p.kind] || "#fff";
+    ctx.save(); ctx.translate(q[0], q[1]); ctx.rotate(Math.PI / 4);
+    ctx.fillStyle = done ? "rgba(61,220,151,.9)" : col; ctx.strokeStyle = "#000"; ctx.lineWidth = dpr;
+    var z = 5 * dpr; ctx.fillRect(-z, -z, 2 * z, 2 * z); ctx.strokeRect(-z, -z, 2 * z, 2 * z); ctx.restore();
+    ctx.fillStyle = "rgba(0,0,0,.6)"; ctx.fillText(p.id, q[0] + 8 * dpr + 1, q[1] + 4 * dpr + 1);
+    ctx.fillStyle = done ? "#aef5d2" : "#fff"; ctx.fillText(p.id, q[0] + 8 * dpr, q[1] + 4 * dpr);
+  });
+  // trail
+  if (rv.trail.length > 1) {
+    ctx.strokeStyle = "rgba(255,213,74,.75)"; ctx.lineWidth = 2 * dpr; ctx.beginPath();
+    rv.trail.forEach(function (p, i) { var q = w2s(p[0], p[1]); if (i) ctx.lineTo(q[0], q[1]); else ctx.moveTo(q[0], q[1]); });
+    var qr = w2s(rv.x, rv.y); ctx.lineTo(qr[0], qr[1]); ctx.stroke();
+  }
+  // waypoints
+  if (rv.wp.length) {
+    ctx.strokeStyle = "rgba(56,217,255,.9)"; ctx.setLineDash([5 * dpr, 4 * dpr]); ctx.lineWidth = 1.5 * dpr; ctx.beginPath();
+    var q0 = w2s(rv.x, rv.y); ctx.moveTo(q0[0], q0[1]);
+    rv.wp.forEach(function (p) { var q = w2s(p.x, p.y); ctx.lineTo(q[0], q[1]); }); ctx.stroke(); ctx.setLineDash([]);
+    rv.wp.forEach(function (p) { var q = w2s(p.x, p.y); ctx.fillStyle = "#38d9ff"; ctx.beginPath(); ctx.arc(q[0], q[1], 3.5 * dpr, 0, 7); ctx.fill(); });
+  }
+  // outpost
+  ctx.save(); ctx.translate(o[0], o[1]);
+  ctx.fillStyle = G.out.lost ? "#ff5d73" : "#e9fbff"; ctx.strokeStyle = "#04080f"; ctx.lineWidth = 1.5 * dpr;
+  ctx.beginPath(); for (var i = 0; i < 6; i++) { var an = i * Math.PI / 3; ctx.lineTo(Math.cos(an) * 9 * dpr, Math.sin(an) * 9 * dpr); } ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#ffd54a"; ctx.fillRect(-14 * dpr, -2 * dpr, 6 * dpr, 4 * dpr); ctx.fillRect(8 * dpr, -2 * dpr, 6 * dpr, 4 * dpr);
+  ctx.restore();
+  // rover
+  var qv = w2s(rv.x, rv.y);
+  ctx.save(); ctx.translate(qv[0], qv[1]); ctx.rotate(rv.hd * E.D2R);
+  ctx.fillStyle = rv.dead ? "#7fa7b8" : rv.hib ? "#9b5cff" : "#38d9ff"; ctx.strokeStyle = "#000"; ctx.lineWidth = 1.5 * dpr;
+  ctx.beginPath(); ctx.moveTo(0, -11 * dpr); ctx.lineTo(7 * dpr, 8 * dpr); ctx.lineTo(0, 4 * dpr); ctx.lineTo(-7 * dpr, 8 * dpr); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.restore();
+  if (lastStep && lastStep.env.sunFrac > 0.5) { ctx.strokeStyle = "rgba(255,213,74,.9)"; ctx.lineWidth = 1.5 * dpr; ctx.beginPath(); ctx.arc(qv[0], qv[1], 14 * dpr, 0, 7); ctx.stroke(); }
+  // compass: sun + earth directions
+  var cx = W - 54 * dpr, cy = W - 90 * dpr, R0 = 30 * dpr;
+  ctx.fillStyle = "rgba(4,8,15,.7)"; ctx.strokeStyle = "rgba(56,217,255,.4)"; ctx.lineWidth = dpr;
+  ctx.beginPath(); ctx.arc(cx, cy, R0 + 8 * dpr, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#7fa7b8"; ctx.fillText("N", cx - 3 * dpr, cy - R0 - 1 * dpr);
+  function arrow(az, col, lab) { var a = az * E.D2R, ex = cx + Math.sin(a) * R0, ey = cy - Math.cos(a) * R0; ctx.strokeStyle = col; ctx.lineWidth = 2.5 * dpr; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(ex, ey); ctx.stroke(); ctx.fillStyle = col; ctx.beginPath(); ctx.arc(ex, ey, 4 * dpr, 0, 7); ctx.fill(); }
+  arrow(C.atAz("sun_az", G.t), "#ffd54a"); arrow(C.atAz("earth_az", G.t), "#4aa8ff");
+  // scale bar
+  var km = view.z > 3 ? 0.5 : view.z > 1.5 ? 1 : 2, bl = km * 1000 * sc;
+  ctx.fillStyle = "#fff"; ctx.fillRect(12 * dpr, W - 40 * dpr, bl, 3 * dpr); ctx.fillText(km + " km", 12 * dpr, W - 46 * dpr);
+}
+
+/* ---------------------------------------------------------------- UI rendering */
+function socBar(pre, soc, B) {
+  $(pre + "SocF").style.width = Math.max(0, Math.min(100, soc)) + "%";
+  $(pre + "SocF").style.background = soc <= 100 * (1 - B.max_dod) + 0.5 ? "linear-gradient(90deg,#a3243a,#ff5d73)" : soc <= 100 * Math.max(B.min_safe_soc, 1 - B.max_dod) ? "linear-gradient(90deg,#b3862a,#ffc857)" : "";
+  $(pre + "Safe").style.left = 100 * Math.max(B.min_safe_soc, 1 - B.max_dod) + "%";
+  $(pre + "Floor").style.left = 100 * (1 - B.max_dod) + "%";
+  $(pre + "SocT").textContent = soc.toFixed(1) + "% · " + (soc / 100 * B.capacity_wh).toFixed(0) + " Wh";
+}
+function battLeft(eWh, B, net) {
+  var floor = B.capacity_wh * (1 - B.max_dod);
+  if (net >= -0.5) return net > 0.5 ? "charging" : "steady";
+  return fmtDur(Math.max(0, eWh - floor) * B.discharge_efficiency / -net);
+}
+function chip(id, cls, txt) { var e = $(id); e.className = "chip " + cls; e.textContent = txt; }
+function renderUI() {
+  var L = lastStep, rv = G.rover, op = G.out, t = G.t;
+  $("clock").textContent = fmtT(P.t0_ms + t * 3600e3) + " UTC";
+  $("progbar").style.width = (100 * t / C.endH).toFixed(2) + "%";
+  $("clocksub").textContent = "Mission day " + (t / 24 + 1).toFixed(2) + " of " + (C.endH / 24).toFixed(1) + " · " + fmtDur(C.endH - t) + " remaining · " + P.site.name;
+  chip("missionStatus", G.ended ? "c-dim" : G.playing ? "c-ok" : "c-warn", G.ended ? "COMPLETE" : G.playing ? "RUNNING" : "PAUSED");
+  $("play").textContent = G.playing ? "⏸ Pause" : "▶ Play";
+  $("play").classList.toggle("pulse", !G.playing && !G.ended);
+  ["ffRise", "ffSet", "ffDay", "ffWeek"].forEach(function (b) { $(b).disabled = !!G.ended; });
+  if (!L) return;
+  var sAlt = L.env.sAlt, se = L.se;
+  $("hudtl").innerHTML = "☀ Sun el <b>" + C.at("sun_alt", t).toFixed(2) + "°</b> az " + C.atAz("sun_az", t).toFixed(0) + "° · 🌍 Earth el <b>" + C.at("earth_alt", t).toFixed(2) + "°</b><br>" +
+    "Rover horizon toward Sun <b>" + (L.env.hzS != null ? L.env.hzS.toFixed(2) : "—") + "°</b> · disc " + (100 * L.env.sunFrac).toFixed(0) + "% visible";
+  var st = S.station[C.idx(t)];
+  $("hudtr").innerHTML = (L.linkUp ? "<span class='chip c-ok'>📶 LINK " + P.stations[st] + "</span>" : "<span class='chip c-bad'>📴 NO LINK</span>") + "<br>" +
+    "<span class='small'>" + (L.txW > 0 ? "TX " + (L.txRate / 1e3).toFixed(0) + " kbps" : "radio idle") + "</span>";
+  // rover
+  if (L.rr) {
+    var rNet = L.rvGen + L.dockW * 0.9 - L.rr.served.reduce(function (a, b) { return a + b; }, 0);
+    socBar("rv", L.rr.soc * 100, RB);
+    $("rvGen").textContent = fmtW(L.rvGen + L.dockW * 0.9) + (L.dockW > 0 ? " 🔌" : "");
+    $("rvUse").textContent = fmtW(L.rr.served.reduce(function (a, b) { return a + b; }, 0));
+    $("rvNet").textContent = (rNet >= 0 ? "+" : "") + fmtW(rNet); $("rvNet").style.color = rNet >= 0 ? "var(--ok)" : "var(--bad)";
+    $("rvLeft").textContent = battLeft(rv.e, RB, rNet);
+  } else { socBar("rv", 0, RB); }
+  $("rvSun").innerHTML = L.env.sunFrac > 0.5 ? "<span style='color:var(--sun)'>lit</span>" : L.inPsr ? "<span style='color:#6fa8ff'>PSR</span>" : "<span style='color:var(--dim)'>shadow</span>";
+  $("rvEarth").innerHTML = L.env.earth ? "<span style='color:var(--earth)'>visible</span>" : "<span style='color:var(--dim)'>hidden</span>";
+  $("rvSlope").textContent = L.slope.toFixed(1) + "° / " + (L.pDrive > 0 ? L.grade.toFixed(1) + "°" : "—");
+  $("rvDist").textContent = (rv.dist / 1000).toFixed(2) + " km";
+  $("rvBuf").textContent = fmtMB(rv.buf);
+  var rst = rv.dead ? ["c-bad", "LOST"] : rv.hib ? ["c-dim", "HIBERNATE"] : rv.task ? ["c-warn", TASKS[rv.task.k].label.toUpperCase()] : L.pDrive > 0 ? ["c-ok", "DRIVING"] :
+    rv.dock && L.canDock ? ["c-ok", "DOCKED"] : L.rr && L.rr.shedding ? ["c-warn", "LOW POWER"] : ["c-ok", "IDLE"];
+  chip("rvStatus", rst[0], rst[1]);
+  var tx = [];
+  if (rv.task) tx.push("⏱ " + TASKS[rv.task.k].label + ": " + Math.max(0, rv.task.rem).toFixed(0) + " min left at " + TASKS[rv.task.k].w + " W");
+  if (L.pDrive > 0) tx.push("Drive " + L.pDrive.toFixed(0) + " W = " + RV.mass_kg + " kg × 1.62 × (" + RV.crr + "·cosθ + sinθ) × v / " + RV.drive_eff + " + " + RV.drive_avionics_w + " W");
+  if (L.uhfOk) tx.push("UHF relay → outpost " + (RV.uhf_rate_bps / 1e3).toFixed(0) + " kbps");
+  if (L.dteRate > 0) tx.push("Rover DTE " + (L.dteRate / 1e3).toFixed(1) + " kbps");
+  if (rv.wp.length) { var w0 = rv.wp[rv.wp.length - 1]; tx.push("→ " + (Math.hypot(w0.x - rv.x, w0.y - rv.y) / 1000).toFixed(2) + " km to go · ETA " + fmtDur(Math.hypot(w0.x - rv.x, w0.y - rv.y) / rv.speed / 3600)); }
+  var dk = Math.hypot(rv.x, rv.y);
+  tx.push("Outpost " + (dk / 1000).toFixed(2) + " km" + (dk <= RV.uhf_range_m ? "" : " · out of UHF range"));
+  $("rvTask").textContent = tx.join(" · ");
+  $("aDock").disabled = rv.dead || !L.canDock; $("aDock").classList.toggle("on", rv.dock && L.canDock);
+  $("aHib").classList.toggle("on", rv.hib); $("aDte").classList.toggle("on", rv.dte);
+  ["aDrill", "aScan", "aMsolo", "aNss", "aPano"].forEach(function (b) { $(b).disabled = rv.dead || rv.hib || !!rv.task; });
+  $("aHome").disabled = rv.dead; $("aStop").disabled = rv.dead;
+  // outpost
+  var ro = L.ro, oUse = ro.served.reduce(function (a, b) { return a + b; }, 0), oNet = L.opGen - oUse;
+  socBar("op", ro.soc * 100, OB);
+  $("opGen").textContent = fmtW(L.opGen); $("opUse").textContent = fmtW(oUse);
+  $("opNet").textContent = (oNet >= 0 ? "+" : "") + fmtW(oNet); $("opNet").style.color = oNet >= 0 ? "var(--ok)" : "var(--bad)";
+  $("opLeft").textContent = battLeft(op.e, OB, oNet);
+  $("opSun").innerHTML = se.sunlit ? "<span style='color:var(--sun)'>lit</span>" : "<span style='color:var(--dim)'>dark</span>";
+  $("opLink").innerHTML = L.linkUp ? "<span style='color:var(--ok)'>" + P.stations[st] + "</span>" : "<span style='color:var(--dim)'>down</span>";
+  $("opHeat").textContent = fmtW(L.oLoads[L.oLoads.length - 3].w);
+  $("opBuf").textContent = fmtMB(op.buf); $("opSent").textContent = fmtMB(op.sent);
+  chip("opStatus", op.lost ? "c-bad" : ro.crit ? "c-bad" : ro.shedding ? "c-warn" : "c-ok", op.lost ? "LOST" : ro.crit ? "CRITICAL" : ro.shedding ? "SHEDDING" : "NOMINAL");
+  var dc = op.rf / P.outpost.comms.sspa_eff + P.outpost.comms.exciter_w;
+  $("rfV").textContent = op.rf + " W RF → " + dc.toFixed(0) + " W DC";
+  $("txInfo").textContent = L.txW > 0 ? "transmitting " + (L.txRate / 1e6).toFixed(2) + " Mbps" + (op.tx === "manual" ? " · " + op.txRem.toFixed(0) + " min left" : "") :
+    op.tx === "off" ? "radio off" : L.linkUp ? (op.tx === "auto" ? "waiting for data" : "") : "no link - queued";
+  // score
+  $("scData").textContent = fmtMB(op.sent); $("scSamp").textContent = rv.samples;
+  $("scPoi").textContent = Object.keys(G.poiDone).length + " / " + (P.pois || []).length;
+  $("scNote").textContent = "Min SoC - outpost " + G.minSocO.toFixed(0) + "%, rover " + G.minSocR.toFixed(0) + "% · rover driven " + (rv.dist / 1000).toFixed(2) + " km";
+}
+function renderSubs() {
+  $("subs").innerHTML = P.outpost.subsystems.map(function (s, i) {
+    return "<div class='s'><span class='n' title='" + s.name + " · " + s.schedule + " · priority " + s.priority + "'>P" + s.priority + " · " + s.name + "</span><span class='small'>" + s.active_w + " W</span>" +
+      "<select data-i='" + i + "'><option value='auto'>Auto</option><option value='on'>On</option><option value='off'>Off</option></select></div>";
+  }).join("");
+  Array.prototype.forEach.call($("subs").querySelectorAll("select"), function (sel) {
+    sel.value = G.out.ov[+sel.dataset.i];
+    sel.onchange = function () { G.out.ov[+sel.dataset.i] = sel.value; logEv("🔧", P.outpost.subsystems[+sel.dataset.i].name + " → " + sel.value.toUpperCase()); forecast(); };
+  });
+}
+function syncTx() {
+  $("txAuto").classList.toggle("on", G.out.tx === "auto"); $("txOff").classList.toggle("on", G.out.tx === "off"); $("txNow").classList.toggle("on", G.out.tx === "manual");
+  $("rf").value = G.out.rf; $("sig").value = G.out.sig; $("setp").value = G.out.setC; $("setV").textContent = G.out.setC;
+  $("spd").value = G.rover.speed; $("spdV").textContent = G.rover.speed.toFixed(2);
+}
+
+/* ---------------------------------------------------------------- dashboard (Power BI-style cross-filtering) */
+var CAT_COL = { computing: "#4aa8ff", standby: "#7fa7b8", comms: "#38d9ff", navigation: "#9b5cff", science: "#3ddc97", thermal: "#ff5d73",
+  mobility: "#ff8c42", "rover dock": "#e056fd", activity: "#c7ecee", other: "#b0bec5" };
+var D = { asset: "outpost", src: MODE === "dash" ? "plan" : "live", off: {}, iso: null, range: null, day: null, cats: [] };
+var plotlyReady = false, dashBuilt = false;
+function dashData() {
+  var t = [], harvest = [], gen = [], use = {}, soc = [], soc2 = [], deficit = [], clip = [], lit = [], plan = P.plan, i, k;
+  if (D.src === "plan") {
+    for (i = 0; i < P.n; i++) {
+      t.push(iso(i * stepH)); harvest.push(plan.harvest_w[i] || 0); gen.push(plan.gen_w[i] || 0); soc.push(plan.soc_pct[i]);
+      deficit.push(plan.deficit_w[i] || 0); clip.push(plan.clip_w ? plan.clip_w[i] || 0 : 0); lit.push(plan.sunlit[i]);
+    }
+    for (k in plan.use_w) use[k] = plan.use_w[k].map(function (v) { return v || 0; });
+  } else {
+    var rows = allRows(), A = D.asset;
+    rows.forEach(function (r, j) {
+      t.push(iso(r.k * stepH));
+      harvest.push(A === "outpost" ? r.oh : A === "rover" ? r.rh : r.oh + r.rh);
+      gen.push(A === "outpost" ? r.og : A === "rover" ? r.rg : r.og + r.rg);
+      deficit.push(A === "outpost" ? r.od : A === "rover" ? r.rd : r.od + r.rd);
+      clip.push(A === "outpost" ? r.oc : A === "rover" ? r.rc : r.oc + r.rc);
+      soc.push(A === "rover" ? r.rs : r.os); soc2.push(A === "both" ? r.rs : null); lit.push(r.lit > 0.5 ? 1 : 0);
+      var srcs = A === "outpost" ? [r.ou] : A === "rover" ? [r.ru] : [r.ou, r.ru];
+      srcs.forEach(function (u) { for (var c in u) { if (!use[c]) use[c] = new Array(rows.length).fill(0); use[c][j] += u[c]; } });
+    });
+    for (k in use) use[k] = use[k].map(function (v) { return v || 0; });
+  }
+  return { t: t, harvest: harvest, gen: gen, use: use, soc: soc, soc2: soc2, deficit: deficit, clip: clip, lit: lit };
+}
+function inRange(ts) { if (!D.range) return true; return ts >= D.range[0] && ts <= D.range[1]; }
+function catsVisible(d) { return Object.keys(d.use).filter(function (c) { return !D.off[c] && (!D.iso || D.iso === c); }); }
+function renderSlicerCats(d) {
+  var cats = Object.keys(d.use).sort();
+  if (cats.join() === D.cats.join()) return;
+  D.cats = cats;
+  $("slCats").innerHTML = "<b>Usage</b>" + cats.map(function (c) {
+    return "<button data-c='" + c + "' class='" + (D.off[c] ? "" : "on") + "' style='border-color:" + (CAT_COL[c] || "#888") + "'>" + c + "</button>";
+  }).join("");
+  Array.prototype.forEach.call($("slCats").querySelectorAll("button"), function (b) {
+    b.onclick = function () { var c = b.dataset.c; D.off[c] = !D.off[c]; b.classList.toggle("on", !D.off[c]); renderDash(true); };
+  });
+}
+function nightShapes(d) {
+  var sh = [], start = null;
+  for (var i = 0; i < d.t.length; i++) {
+    if (!d.lit[i] && start == null) start = d.t[i];
+    if ((d.lit[i] || i === d.t.length - 1) && start != null) {
+      sh.push({ type: "rect", xref: "x", yref: "paper", x0: start, x1: d.t[i], y0: 0, y1: 1, fillcolor: "rgba(80,110,200,.10)", line: { width: 0 }, layer: "below" });
+      start = null;
+    }
+  }
+  return sh;
+}
+function renderDash(full) {
+  if (!plotlyReady) return;
+  var d = dashData(), Pl = window.Plotly;
+  renderSlicerCats(d);
+  var cats = catsVisible(d), tr = [];
+  tr.push({ x: d.t, y: d.harvest, name: "☀ Sunlight harvest (on array)", type: "scatter", mode: "lines", line: { color: "#ffd54a", width: 1 }, fill: "tozeroy", fillcolor: "rgba(255,213,74,.10)", hovertemplate: "%{y:.0f} W" });
+  tr.push({ x: d.t, y: d.gen, name: "⚡ Generation", type: "scatter", mode: "lines", line: { color: "#ff9f43", width: 2 }, hovertemplate: "%{y:.0f} W" });
+  cats.forEach(function (c) { tr.push({ x: d.t, y: d.use[c], name: "Use · " + c, type: "scatter", mode: "lines", stackgroup: "use", showlegend: false, line: { width: 0.5, color: CAT_COL[c] || "#999" }, hovertemplate: "%{y:.0f} W" }); });
+  tr.push({ x: d.t, y: d.deficit, name: "Unserved demand", type: "scatter", mode: "lines", line: { color: "#ff5d73", width: 1, dash: "dot" }, hovertemplate: "%{y:.0f} W" });
+  tr.push({ x: d.t, y: d.soc, name: D.asset === "rover" ? "Rover SoC %" : "Outpost SoC %", yaxis: "y2", type: "scatter", mode: "lines", line: { color: "#3ddc97", width: 2 }, hovertemplate: "%{y:.1f}%" });
+  if (D.src === "live" && D.asset === "both") tr.push({ x: d.t, y: d.soc2, name: "Rover SoC %", yaxis: "y2", type: "scatter", mode: "lines", line: { color: "#38d9ff", width: 2 }, hovertemplate: "%{y:.1f}%" });
+  if (D.src === "live" && D.asset !== "rover") {
+    var pt = [], ps = []; for (var i = 0; i <= Math.min(C.idx(G.t), P.n - 1); i++) { pt.push(iso(i * stepH)); ps.push(P.plan.soc_pct[i]); }
+    tr.push({ x: pt, y: ps, name: "M5 plan SoC %", yaxis: "y2", type: "scatter", mode: "lines", line: { color: "#9b5cff", width: 1.2, dash: "dot" }, hovertemplate: "%{y:.1f}%" });
+  }
+  if (D.src === "live" && FC.opProj && D.asset !== "rover") {
+    tr.push({ x: FC.opProj.map(function (_, j) { return iso((FC.opProjK + j) * stepH); }), y: FC.opProj, name: "Outpost forecast", yaxis: "y2", type: "scatter", mode: "lines", line: { color: "#3ddc97", width: 1.2, dash: "dash" }, hovertemplate: "%{y:.1f}%" });
+  }
+  if (D.src === "live" && FC.rvProj && D.asset !== "outpost") {
+    tr.push({ x: FC.rvProj.map(function (_, j) { return iso((FC.opProjK + j) * stepH); }), y: FC.rvProj, name: "Rover forecast (parked)", yaxis: "y2", type: "scatter", mode: "lines", line: { color: "#38d9ff", width: 1.2, dash: "dash" }, hovertemplate: "%{y:.1f}%" });
+  }
+  var shapes = nightShapes(d);
+  if (D.src === "live") shapes.push({ type: "line", xref: "x", yref: "paper", x0: iso(G.t), x1: iso(G.t), y0: 0, y1: 1, line: { color: "#fff", width: 1, dash: "dot" } });
+  var xr = [iso(0), iso(C.endH)];
+  var lay = { paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(4,8,15,.6)", font: { color: "#d7f6ff", size: 11, family: "Segoe UI, sans-serif" },
+    margin: { t: 64, l: 52, r: 20, b: 10 }, hovermode: "x unified", uirevision: "keep", dragmode: "zoom",
+    legend: { orientation: "h", x: 0, y: 1.2, yanchor: "bottom", font: { size: 10 } }, shapes: shapes,
+    xaxis: { type: "date", anchor: "y2", range: D.range ? [iso(D.range[0]), iso(D.range[1])] : xr, gridcolor: "rgba(56,217,255,.08)",
+      rangeslider: { visible: true, thickness: 0.07, bgcolor: "rgba(10,20,34,.8)", range: xr },
+      rangeselector: { buttons: [{ count: 1, label: "1d", step: "day", stepmode: "backward" }, { count: 3, label: "3d", step: "day", stepmode: "backward" },
+        { count: 7, label: "7d", step: "day", stepmode: "backward" }, { step: "all", label: "All" }], bgcolor: "#0a1422", activecolor: "#1d4a6b", x: 0, y: 1.02, yanchor: "bottom", font: { size: 10 } } },
+    yaxis: { title: { text: "Power (W)" }, domain: [0.36, 1], anchor: "x", gridcolor: "rgba(56,217,255,.08)", rangemode: "tozero" },
+    yaxis2: { title: { text: "SoC %" }, domain: [0, 0.27], range: [0, 105], gridcolor: "rgba(56,217,255,.08)" } };
+  if (D.range) lay.uirevision = "r" + D.range[0].toFixed(3) + D.range[1].toFixed(3);
+  Pl.react("chMain", tr, lay, { displaylogo: false, responsive: true, modeBarButtonsToRemove: ["lasso2d", "select2d"] });
+  if (!dashBuilt) {
+    dashBuilt = true;
+    $("chMain").on("plotly_relayout", function (ev) {
+      var a = ev["xaxis.range[0]"] || (ev["xaxis.range"] && ev["xaxis.range"][0]), b = ev["xaxis.range[1]"] || (ev["xaxis.range"] && ev["xaxis.range"][1]);
+      if (ev["xaxis.autorange"] || ev["xaxis.rangeselector"] === "all") { D.range = null; D.day = null; }
+      else if (a && b) { D.range = [toH(a), toH(b)]; if (D.day != null && Math.abs(D.range[1] - D.range[0] - 24) > 0.5) D.day = null; }
+      else return;
+      renderSide();
+    });
+  }
+  renderSide(d);
+}
+function toH(s) { var z = String(s).trim().replace(" ", "T"); if (z.length === 10) z += "T00:00:00"; return (Date.parse(z + "Z") - P.t0_ms) / 3600e3; }
+function renderSide(d) {
+  d = d || dashData();
+  var Pl = window.Plotly, cats = catsVisible(d), h = stepH, sel = function (i) { return inRange(toH(d.t[i])); };
+  var E_h = 0, E_g = 0, E_u = 0, E_d = 0, E_c = 0, minS = 100, byCat = {}, days = {}, n = 0;
+  for (var i = 0; i < d.t.length; i++) {
+    var di = Math.floor(toH(d.t[i]) / 24); days[di] = days[di] || { h: 0, g: 0, u: 0 };
+    var u = 0; cats.forEach(function (c) { u += d.use[c][i]; });
+    days[di].h += d.harvest[i] * h / 1000; days[di].g += d.gen[i] * h / 1000; days[di].u += u * h / 1000;
+    if (!sel(i)) continue;
+    n++; E_h += d.harvest[i] * h; E_g += d.gen[i] * h; E_u += u * h; E_d += d.deficit[i] * h; if (d.clip.length) E_c += d.clip[i] * h;
+    if (d.soc[i] != null) minS = Math.min(minS, d.soc[i]);
+    cats.forEach(function (c) { byCat[c] = (byCat[c] || 0) + d.use[c][i] * h; });
+  }
+  // plan comparison for the same window (outpost only)
+  var pg = 0, pu = 0, planOk = D.src === "live" && D.asset === "outpost";
+  if (planOk) for (var j = 0; j < d.t.length; j++) if (sel(j)) { var k = Math.round(toH(d.t[j]) / stepH); pg += (P.plan.gen_w[k] || 0) * h; var su = 0; for (var c in P.plan.use_w) su += P.plan.use_w[c][k] || 0; pu += su * h; }
+  function delta(v, ref) { if (!planOk || !(ref > 0)) return ""; var x = 100 * (v - ref) / ref; return "<span style='color:" + (Math.abs(x) < 0.5 ? "var(--dim)" : x > 0 ? "var(--warn)" : "var(--ok)") + "'>" + (x >= 0 ? "▲ " : "▼ ") + Math.abs(x).toFixed(1) + "% vs plan</span>"; }
+  var kp = [
+    ["☀ Sunlight harvest", (E_h / 1000).toFixed(1) + " kWh", "sunlight on the array"],
+    ["⚡ Generated", (E_g / 1000).toFixed(1) + " kWh", planOk ? delta(E_g, pg) : "electrical output"],
+    ["🔌 Used", (E_u / 1000).toFixed(1) + " kWh", planOk ? delta(E_u, pu) : "loads served"],
+    ["Conversion", E_h > 0 ? (100 * E_g / E_h).toFixed(1) + " %" : "—", "generated / harvest"],
+    ["Utilisation", E_g > 0 ? (100 * E_u / E_g).toFixed(0) + " %" : "—", "used / generated"],
+    ["Spilled", d.clip.length ? (E_c / 1000).toFixed(1) + " kWh" : "—", "battery full - unused"],
+    ["Unserved", (E_d / 1000).toFixed(2) + " kWh", E_d > 1 ? "<span style='color:var(--bad)'>shedding occurred</span>" : "<span style='color:var(--ok)'>none</span>"],
+    ["Min SoC", n ? minS.toFixed(0) + " %" : "—", "in selection"]
+  ];
+  $("kpis").innerHTML = kp.map(function (k) { return "<div class='kpi'><div class='l'>" + k[0] + "</div><div class='v'>" + k[1] + "</div><div class='d'>" + k[2] + "</div></div>"; }).join("");
+  var span = D.range ? fmtDur(D.range[1] - D.range[0]) + " from " + iso(Math.max(0, D.range[0])).slice(0, 16) : "whole " + (D.src === "plan" ? "planned mission" : "run so far");
+  $("crumb").innerHTML = (D.src === "plan" ? "M5 plan" : "Live") + " › <b>" + (D.asset === "both" ? "combined" : D.asset) + "</b> › " + (D.day != null ? "<b>day " + (D.day + 1) + "</b>" : span) + (D.iso ? " › <b>" + D.iso + "</b>" : "");
+  $("drillUp").disabled = !(D.range || D.iso);
+  var labs = Object.keys(byCat).filter(function (c) { return byCat[c] > 0.01; });
+  Pl.react("chDonut", [{ type: "pie", labels: labs, values: labs.map(function (c) { return byCat[c] / 1000; }), hole: 0.58, sort: false,
+    marker: { colors: labs.map(function (c) { return CAT_COL[c] || "#999"; }), line: { color: "#04080f", width: 1 } }, pull: labs.map(function (c) { return c === D.iso ? 0.08 : 0; }),
+    textinfo: "percent", hovertemplate: "%{label}: %{value:.2f} kWh (%{percent})<extra></extra>" }],
+    { paper_bgcolor: "rgba(0,0,0,0)", font: { color: "#d7f6ff", size: 11 }, margin: { t: 28, l: 6, r: 6, b: 6 }, showlegend: true, legend: { font: { size: 10 } },
+      title: { text: "Usage by category · click to isolate", font: { size: 12 } },
+      annotations: [{ text: (E_u / 1000).toFixed(1) + "<br>kWh", showarrow: false, font: { size: 13, color: "#fff" } }] },
+    { displaylogo: false, displayModeBar: false, responsive: true });
+  var dk = Object.keys(days).map(Number).sort(function (a, b) { return a - b; });
+  var op = dk.map(function (x) { return D.day == null || D.day === x ? 1 : 0.35; });
+  Pl.react("chDays", [
+    { type: "bar", x: dk.map(function (x) { return x + 1; }), y: dk.map(function (x) { return days[x].h; }), name: "Harvest", marker: { color: "#ffd54a", opacity: op } },
+    { type: "bar", x: dk.map(function (x) { return x + 1; }), y: dk.map(function (x) { return days[x].g; }), name: "Generated", marker: { color: "#ff9f43", opacity: op } },
+    { type: "bar", x: dk.map(function (x) { return x + 1; }), y: dk.map(function (x) { return days[x].u; }), name: "Used", marker: { color: "#38d9ff", opacity: op } }],
+    { paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(4,8,15,.6)", font: { color: "#d7f6ff", size: 11 }, margin: { t: 28, l: 40, r: 8, b: 48 }, barmode: "group", bargap: 0.15,
+      title: { text: "Daily energy (kWh) by mission day · click a day to drill in", font: { size: 12 } }, legend: { orientation: "h", y: -0.28, font: { size: 10 } },
+      xaxis: { gridcolor: "rgba(56,217,255,.08)" }, yaxis: { gridcolor: "rgba(56,217,255,.08)" } },
+    { displaylogo: false, displayModeBar: false, responsive: true });
+  if (!renderSide.bound) {
+    renderSide.bound = true;
+    $("chDonut").on("plotly_click", function (ev) { var c = ev.points[0].label; D.iso = D.iso === c ? null : c; renderDash(true); });
+    $("chDays").on("plotly_click", function (ev) { var day = ev.points[0].x - 1; D.day = day; D.range = [day * 24, day * 24 + 24]; renderDash(true); });
+  }
+}
+function bindDash() {
+  function grp(id, key, after) {
+    Array.prototype.forEach.call($(id).querySelectorAll("button"), function (b) {
+      b.onclick = function () { D[key] = b.dataset.v; Array.prototype.forEach.call($(id).querySelectorAll("button"), function (x) { x.classList.toggle("on", x === b); }); D.cats = []; if (after) after(); renderDash(true); };
+    });
+  }
+  grp("slAsset", "asset", function () { if (D.asset !== "outpost" && D.src === "plan") { D.src = "live"; syncSrc(); } });
+  grp("slSource", "src", function () { if (D.src === "plan") { D.asset = "outpost"; Array.prototype.forEach.call($("slAsset").querySelectorAll("button"), function (x) { x.classList.toggle("on", x.dataset.v === "outpost"); }); } });
+  $("drillUp").onclick = function () { if (D.iso) D.iso = null; else { D.range = null; D.day = null; } renderDash(true); };
+}
+function syncSrc() { Array.prototype.forEach.call($("slSource").querySelectorAll("button"), function (x) { x.classList.toggle("on", x.dataset.v === D.src); }); }
+function exportCSV() {
+  var rows = allRows(), cats = {}; rows.forEach(function (r) { for (var c in r.ou) cats["out_" + c] = 1; for (var c2 in r.ru) cats["rov_" + c2] = 1; });
+  var cl = Object.keys(cats).sort(), hd = ["time_utc", "outpost_harvest_w", "outpost_gen_w", "outpost_soc_pct", "outpost_unserved_w", "rover_harvest_w", "rover_gen_w", "rover_soc_pct", "rover_unserved_w"].concat(cl.map(function (c) { return c + "_w"; }));
+  var lines = [hd.join(",")].concat(rows.map(function (r) {
+    return [iso(r.k * stepH), r.oh, r.og, r.os, r.od, r.rh, r.rg, r.rs, r.rd].concat(cl.map(function (c) { var s = c.slice(0, 4) === "out_" ? r.ou : r.ru; return s[c.slice(4)] || 0; })).join(",");
+  }));
+  var blob = new Blob([lines.join("\n")], { type: "text/csv" }), a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "mission_sim_" + P.site.id + ".csv"; document.body.appendChild(a); a.click(); a.remove();
+}
+function loadPlotly(cb) {
+  if (window.Plotly) { cb(); return; }
+  var srcs = [window.PLOTLY_SRC || "/app/static/vendor/plotly.min.js", "https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.35.2/plotly.min.js"], i = 0;
+  (function next() {
+    if (i >= srcs.length) { $("chMain").innerHTML = "<p class='small' style='padding:20px'>Charts unavailable (Plotly could not be loaded).</p>"; return; }
+    var s = document.createElement("script"); s.src = srcs[i++]; s.onload = cb; s.onerror = next; document.head.appendChild(s);
+  })();
+}
+
+/* ---------------------------------------------------------------- input */
+function bindSim() {
+  $("play").onclick = function () { if (G.ended) return; G.playing = !G.playing; renderUI(); };
+  Array.prototype.forEach.call(document.querySelectorAll("#speeds [data-sp]"), function (b) {
+    b.classList.toggle("on", +b.dataset.sp === G.speed);
+    b.onclick = function () { G.speed = +b.dataset.sp; Array.prototype.forEach.call(document.querySelectorAll("#speeds [data-sp]"), function (x) { x.classList.toggle("on", x === b); }); };
+  });
+  $("restart").onclick = function () { if (!confirm("Restart the mission from day 1?")) return; restart(); };
+  $("endrestart").onclick = function () { $("endmodal").style.display = "none"; restart(); };
+  $("endclose").onclick = function () { $("endmodal").style.display = "none"; };
+  $("exportcsv").onclick = exportCSV;
+  function startTask(k) {
+    var rv = G.rover; if (rv.dead || rv.hib || rv.task) return;
+    rv.wp = []; rv.task = { k: k, rem: TASKS[k].min };
+    var p = nearestPoi(rv.x, rv.y, 150);
+    logEv("▶", TASKS[k].label + " started (" + TASKS[k].w + " W × " + TASKS[k].min + " min)" + (p && !G.poiDone[p.id] && k !== "pano" ? " at target " + p.id : ""));
+  }
+  $("aDrill").onclick = function () { startTask("drill"); };
+  $("aScan").onclick = function () { startTask("scan"); };
+  $("aPano").onclick = function () { startTask("pano"); };
+  $("aMsolo").onclick = function () { startTask("msolo"); };
+  $("ffRise").onclick = function () { var h = nextOutpostSun(true); if (h == null) toast("No sunrise left in this mission window"); else fastForward(h + 1 / 60, "sunrise at the outpost"); };
+  $("ffSet").onclick = function () { var h = nextOutpostSun(false); if (h == null) toast("No sunset left in this mission window - the outpost stays lit"); else fastForward(h + 1 / 60, "sunset at the outpost"); };
+  $("ffDay").onclick = function () { fastForward(24); };
+  $("ffWeek").onclick = function () { fastForward(168); };
+  $("aNss").onclick = function () { startTask("nss"); };
+  $("aStop").onclick = function () { var rv = G.rover; if (rv.task) logEv("✋", TASKS[rv.task.k].label + " aborted"); rv.task = null; rv.wp = []; };
+  $("aHome").onclick = function () { var rv = G.rover; rv.task = null; rv.hib = false; rv.wp = [{ x: 40, y: 0 }]; logEv("🏠", "Returning to outpost (" + (Math.hypot(rv.x - 40, rv.y) / 1000).toFixed(2) + " km)"); };
+  $("aDock").onclick = function () { var rv = G.rover; rv.dock = !rv.dock; logEv("🔌", rv.dock ? "Docked - charging from the outpost bus" : "Undocked"); };
+  $("aHib").onclick = function () { var rv = G.rover; rv.hib = !rv.hib; if (rv.hib) { rv.task = null; rv.wp = []; } logEv("💤", rv.hib ? "Rover hibernating - survival loads only" : "Rover woke up"); forecast(); };
+  $("aDte").onclick = function () { var rv = G.rover; rv.dte = !rv.dte; logEv("📡", "Rover direct-to-Earth " + (rv.dte ? "enabled" : "disabled")); };
+  $("spd").oninput = function () { G.rover.speed = +$("spd").value; $("spdV").textContent = G.rover.speed.toFixed(2); };
+  $("sig").onchange = function () { G.out.sig = $("sig").value; if (G.out.sig !== "custom") G.out.rf = +G.out.sig; syncTx(); };
+  $("rf").oninput = function () { G.out.rf = +$("rf").value; G.out.sig = "custom"; $("sig").value = "custom"; };
+  $("txNow").onclick = function () { G.out.tx = "manual"; G.out.txRem = 30; logEv("📡", "Transmitting " + G.out.rf + " W RF for 30 min"); syncTx(); };
+  $("txAuto").onclick = function () { G.out.tx = "auto"; logEv("📡", "Auto downlink enabled"); syncTx(); };
+  $("txOff").onclick = function () { G.out.tx = "off"; logEv("📴", "Outpost radio off"); syncTx(); };
+  $("setp").oninput = function () { G.out.setC = +$("setp").value; $("setV").textContent = G.out.setC; };
+  $("setp").onchange = function () { logEv("🌡", "Outpost heater set point → " + G.out.setC + " °C"); forecast(); };
+  $("layer").onchange = function () { buildBase($("layer").value); drawMap(); };
+  $("tglShadow").onclick = function () { showShadow = !showShadow; $("tglShadow").classList.toggle("on", showShadow); updateShadows(true); drawMap(); };
+  $("tglRadio").onclick = function () { showRadio = !showRadio; $("tglRadio").classList.toggle("on", showRadio); updateShadows(true); drawMap(); };
+  $("zoomReset").onclick = function () { view = { z: 1, cx: 0, cy: 0 }; drawMap(); };
+  // map pointer: click = waypoint, drag = pan, wheel = zoom
+  var down = null;
+  cv.addEventListener("pointerdown", function (e) { down = { x: e.clientX, y: e.clientY, cx: view.cx, cy: view.cy, moved: false }; try { cv.setPointerCapture(e.pointerId); } catch (_) {} });
+  cv.addEventListener("pointermove", function (e) {
+    if (!down || !T) return;
+    var dx = e.clientX - down.x, dy = e.clientY - down.y;
+    if (Math.hypot(dx, dy) > 5) down.moved = true;
+    if (down.moved) { var r = cv.getBoundingClientRect(), sc = r.width / (2 * T.halfX) * view.z; view.cx = down.cx - dx / sc; view.cy = down.cy + dy / sc; drawMap(); }
+  });
+  cv.addEventListener("pointerup", function (e) {
+    if (!down || !T) return;
+    var wasDrag = down.moved; down = null;
+    if (wasDrag) return;
+    var r = cv.getBoundingClientRect(), dpr = cv.width / r.width, w = s2w((e.clientX - r.left) * dpr, (e.clientY - r.top) * dpr);
+    if (!T.inside(w[0], w[1]) || G.rover.dead) return;
+    var p = nearestPoi(w[0], w[1], 220 / view.z); if (p) { w = [p.x, p.y]; }
+    if (G.rover.hib) { G.rover.hib = false; logEv("💤", "Rover woke up"); }
+    if (G.rover.task) { logEv("✋", TASKS[G.rover.task.k].label + " aborted"); G.rover.task = null; }
+    if (e.shiftKey) G.rover.wp.push({ x: w[0], y: w[1] }); else G.rover.wp = [{ x: w[0], y: w[1] }];
+    G.rover.dock = false;
+    if (p) toast("Driving to " + p.id + " · " + p.label + " (" + p.value_mb + " MB)");
+    drawMap();
+  });
+  cv.addEventListener("wheel", function (e) {
+    if (!T) return; e.preventDefault();
+    var r = cv.getBoundingClientRect(), dpr = cv.width / r.width, before = s2w((e.clientX - r.left) * dpr, (e.clientY - r.top) * dpr);
+    view.z = Math.min(12, Math.max(1, view.z * (e.deltaY < 0 ? 1.2 : 1 / 1.2)));
+    var after = s2w((e.clientX - r.left) * dpr, (e.clientY - r.top) * dpr);
+    view.cx += before[0] - after[0]; view.cy += before[1] - after[1];
+    if (view.z === 1) { view.cx = 0; view.cy = 0; }
+    drawMap();
+  }, { passive: false });
+  var keys = { ArrowUp: 0, w: 0, ArrowRight: 90, d: 90, ArrowDown: 180, s: 180, ArrowLeft: 270, a: 270 };
+  window.addEventListener("keydown", function (e) {
+    if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "SELECT")) return;
+    if (e.key === " ") { e.preventDefault(); $("play").click(); return; }
+    if ("1234567".indexOf(e.key) >= 0) { var b = document.querySelectorAll("#speeds [data-sp]")[+e.key - 1]; if (b) b.click(); return; }
+    if (e.key in keys && !G.rover.dead) {
+      e.preventDefault(); var rv = G.rover, a = keys[e.key] * E.D2R;
+      rv.hib = false; rv.task = null; rv.dock = false;
+      rv.wp = [{ x: rv.x + Math.sin(a) * 300, y: rv.y + Math.cos(a) * 300 }];
+      if (!G.playing) { G.playing = true; }
+    }
+  });
+}
+function restart() {
+  try { localStorage.removeItem(KEY); } catch (e) {}
+  G = freshState(); profCache.clear(); lastStep = null; FC = { t: -1 };
+  logEv("🚀", "Mission start at " + P.site.name + " - rover docked beside the outpost", "ok");
+  renderSubs(); syncTx(); step(1 / 60); forecast(); updateShadows(true); drawMap(); renderUI(); renderDash(true);
+}
+
+/* ---------------------------------------------------------------- main loop */
+var lastFrame = 0, lastUI = 0, lastDash = 0, lastFc = 0, lastSave = 0;
+function frame(ts) {
+  var dt = lastFrame ? Math.min(0.1, (ts - lastFrame) / 1000) : 0; lastFrame = ts;
+  if (G.playing && !G.ended) {
+    var simH = dt * G.speed / 3600, sub = G.speed <= 600 ? 1 / 60 : G.speed <= 3600 ? 2 / 60 : G.speed <= 86400 ? 5 / 60 : Math.min(stepH, 0.5);
+    var steps = Math.min(600, Math.ceil(simH / sub));
+    for (var i = 0; i < steps && G.t < C.endH; i++) step(Math.min(sub, simH / steps));
+    if (G.t >= C.endH) endMission();
+    updateShadows(false); drawMap();
+  }
+  if (ts - lastUI > 120) { renderUI(); lastUI = ts; }
+  if (ts - lastFc > 900 && G.playing) { forecast(); lastFc = ts; }
+  if (ts - lastDash > 1500 && G.playing) { renderDash(false); lastDash = ts; }
+  if (ts - lastSave > 5000) { save(); lastSave = ts; }
+  requestAnimationFrame(frame);
+}
+function fastForward(hours, why) {
+  if (G.ended || !(hours > 0)) return;
+  var tgt = Math.min(C.endH, G.t + hours), sub = Math.min(stepH, 0.25), guard = 0;
+  while (G.t < tgt - 1e-9 && guard++ < 200000) step(Math.min(sub, tgt - G.t));
+  logEv("⏭", "Fast-forwarded " + fmtDur(hours) + (why ? " to " + why : "") + " (full physics)");
+  if (G.t >= C.endH) endMission();
+  forecast(); updateShadows(true); drawMap(); renderUI(); renderDash(true); save();
+}
+function nextOutpostSun(want) {
+  var i0 = C.idx(G.t);
+  for (var i = i0 + 1; i < C.n; i++) if ((P.plan.sunlit[i] === 1) === want && (P.plan.sunlit[i - 1] === 1) !== want) return i * stepH - G.t;
+  return null;
+}
+function endMission() {
+  G.playing = false; G.ended = true; flushRow();
+  logEv("🏁", "Mission window complete", "ok");
+  var rv = G.rover, op = G.out;
+  $("endbody").innerHTML = "<p>" + P.site.name + " · " + (C.endH / 24).toFixed(1) + " days</p><div class='kv'>" +
+    "<div><div class='l'>Data to Earth</div><div class='v'>" + fmtMB(op.sent) + "</div></div><div><div class='l'>Samples</div><div class='v'>" + rv.samples + "</div></div>" +
+    "<div><div class='l'>Targets</div><div class='v'>" + Object.keys(G.poiDone).length + "/" + (P.pois || []).length + "</div></div>" +
+    "<div><div class='l'>Driven</div><div class='v'>" + (rv.dist / 1000).toFixed(2) + " km</div></div><div><div class='l'>Outpost min SoC</div><div class='v'>" + G.minSocO.toFixed(0) + "%</div></div>" +
+    "<div><div class='l'>Rover</div><div class='v'>" + (rv.dead ? "lost" : "alive") + "</div></div></div>";
+  $("endmodal").style.display = "flex"; renderUI(); renderDash(true); save();
+}
+
+/* ---------------------------------------------------------------- boot */
+bindDash();
+if (MODE === "dash") {
+  $("sim").style.display = "none"; $("slAsset").style.display = "none"; $("slSource").style.display = "none";
+  $("dashSrc").textContent = "M5 plan · " + P.site.name + " · " + (C.endH / 24).toFixed(1) + " d";
+  loadPlotly(function () { plotlyReady = true; renderDash(true); });
+  return;
+}
+$("dashSrc").textContent = "live run · switch Data → M5 plan to compare";
+$("farsrc").textContent = P.far_src ? "far horizon: " + P.far_src : "";
+sizeCanvas(); buildBase("relief");
+window.addEventListener("resize", function () { sizeCanvas(); drawMap(); });
+bindSim(); renderSubs(); syncTx();
+if (resumed) { renderLog(); toast("Resumed your saved run - day " + (G.t / 24 + 1).toFixed(1) + ". Use ↺ Restart for a fresh mission."); step(1 / 3600); }
+else { logEv("🚀", "Mission start at " + P.site.name + " - rover docked beside the outpost. Press ▶ Play, then click the map to drive.", "ok"); step(1 / 60); }
+forecast(); updateShadows(true); drawMap(); renderUI();
+loadPlotly(function () { plotlyReady = true; renderDash(true); });
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
