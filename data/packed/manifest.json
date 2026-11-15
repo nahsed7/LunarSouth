@@ -1,0 +1,59 @@
+{
+ "files": [
+  {
+   "path": "data/raw/lola_illum/AVGVISIB_85S_060M_201608.IMG",
+   "size": 51166728,
+   "sha256": "82dadf321dee28f1947c1fed81858d4cf50fe8eb2aa405aae114e8ab21c1efe1",
+   "parts": [
+    "data__raw__lola_illum__AVGVISIB_85S_060M_201608.IMG.gz.part00",
+    "data__raw__lola_illum__AVGVISIB_85S_060M_201608.IMG.gz.part01"
+   ]
+  },
+  {
+   "path": "data/raw/lola_illum/AVGVISIB_85S_060M_201608_EARTH.IMG",
+   "size": 51166728,
+   "sha256": "0958313069d6039b2474c875ff662f28dbcba2bd853d9ea458aa807b7948c11f",
+   "parts": [
+    "data__raw__lola_illum__AVGVISIB_85S_060M_201608_EARTH.IMG.gz.part00",
+    "data__raw__lola_illum__AVGVISIB_85S_060M_201608_EARTH.IMG.gz.part01"
+   ]
+  },
+  {
+   "path": "data/raw/lola_illum/LPSR_85S_060M_201608.IMG",
+   "size": 51166728,
+   "sha256": "f8203cab342c817fc7851431e264def3cc64a3b8c30f032d61e0a44f1e4ef761",
+   "parts": [
+    "data__raw__lola_illum__LPSR_85S_060M_201608.IMG.gz.part00"
+   ]
+  },
+  {
+   "path": "data/raw/lola_pds/ldem_16.img",
+   "size": 33177600,
+   "sha256": "a511e40d7a3ea3275945b4da2a1df377133264fab0be94b7434b1cf8907254cb",
+   "parts": [
+    "data__raw__lola_pds__ldem_16.img.gz.part00",
+    "data__raw__lola_pds__ldem_16.img.gz.part01"
+   ]
+  },
+  {
+   "path": "data/raw/lola_pds/ldem_75s_240m.img",
+   "size": 29062688,
+   "sha256": "d031efe2611b17dfbf3c158f5e15dc04cd5719349dcbf6384bb21fd97697c490",
+   "parts": [
+    "data__raw__lola_pds__ldem_75s_240m.img.gz.part00",
+    "data__raw__lola_pds__ldem_75s_240m.img.gz.part01"
+   ]
+  },
+  {
+   "path": "data/raw/lola_pds/ldem_80s_80m.img",
+   "size": 115520000,
+   "sha256": "e6591eeea35402ca5e124ca00f5bf0774381a2d4fa919144b455d82b8ff65fdc",
+   "parts": [
+    "data__raw__lola_pds__ldem_80s_80m.img.gz.part00",
+    "data__raw__lola_pds__ldem_80s_80m.img.gz.part01",
+    "data__raw__lola_pds__ldem_80s_80m.img.gz.part02",
+    "data__raw__lola_pds__ldem_80s_80m.img.gz.part03"
+   ]
+  }
+ ]
+}
